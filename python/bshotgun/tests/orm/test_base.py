@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 """
 @package bcore.tests.db.shotgun.orm.test_base
-@brief tests for bcore.db.shotgun.orm
+@brief tests for bshotgun.orm
 
 @copyright 2013 Sebastian Thiel
 """
@@ -28,9 +28,9 @@ from bcore.tests.db.shotgun import ShotgunTestDatabase
 import bcore
 
 # test import *
-from bcore.db.shotgun.orm import types as sgtypes
-from bcore.db.shotgun.orm import *
-from bcore.db.shotgun import ProxyShotgunConnection
+from bshotgun.orm import types as sgtypes
+from bshotgun.orm import *
+from bshotgun import ProxyShotgunConnection
 from bcore.utility import DictObject
 
 

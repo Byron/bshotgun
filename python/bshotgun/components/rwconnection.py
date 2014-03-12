@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.db.shotgun.components.rwconnection
+@package bshotgun.components.rwconnection
 @brief A module with a connection that reads and writes from/to shotun
 
 @copyright 2013 Sebastian Thiel

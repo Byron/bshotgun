@@ -15,12 +15,12 @@ import zlib
 
 
 from bcore.tests import TestCaseBase
-from bcore.db.shotgun import (
+from bshotgun import (
                                 ProxyShotgunConnection,
                                 SQLProxyShotgunConnection,
                                 ProxyMeta
                           )
-from bcore.db.shotgun.orm import ShotgunTypeFactory
+from bshotgun.orm import ShotgunTypeFactory
 
 
 class ShotgunTestDatabase(object):

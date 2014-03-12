@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.db.shotgun.base
+@package bshotgun.base
 @brief Implementations for use with the shotgun database
 
 @copyright 2013 Sebastian Thiel
@@ -26,7 +26,7 @@ shotgun_schema = KeyValueStoreSchema('shotgun', {'host' : str,
                                                  'http_proxy' : str})
 
 
-log = service(bcore.ILog).new('bcore.db.shotgun.base')
+log = service(bcore.ILog).new('bshotgun.base')
 
 
 class ProxyMeta(IShotgunConnection.__metaclass__):

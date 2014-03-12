@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 """
 @package bcore.tests.db.shotgun.test_sql
-@brief tests for bcore.db.shotgun.sql
+@brief tests for bshotgun.sql
 
 @copyright 2013 Sebastian Thiel
 """
@@ -20,8 +20,8 @@ from bcore.tests import TestCaseBase
 from bcore.tests.db.shotgun import ReadOnlyTestSQLProxyShotgunConnection
 
 # test import *
-from bcore.db.shotgun import *
-from bcore.db.shotgun.orm import ShotgunTypeFactory
+from bshotgun import *
+from bshotgun.orm import ShotgunTypeFactory
 from bcore import IShotgunConnection
 from bcore.core.component import ServiceNotFound
 

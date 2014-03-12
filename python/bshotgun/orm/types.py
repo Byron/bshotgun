@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.db.shotgun.orm.types
+@package bshotgun.orm.types
 @brief Custom types representing respective shotgun types
 
 @copyright 2013 Sebastian Thiel
@@ -19,7 +19,7 @@ from time import (
 from bcore import ILog
 from bcore.utility import DictObject
 
-log = service(ILog).new('bcore.db.shotgun.orm.types')
+log = service(ILog).new('bshotgun.orm.types')
 
 
 class ShotgunEntityMarker(object):

@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.db.shotgun.components
+@package bshotgun.components
 @brief A package with various components for individual loading !
 
 @copyright 2013 Sebastian Thiel
