@@ -566,6 +566,12 @@ class ShotgunTypeFactory(ApplicationSettingsMixin):
     
     def _schema_path(self, type_name):
         """@return path to our schema for the specified shotgun type"""
+        tree = self.settings_value().schema_cache_tree
+        if not tree.isdir():
+            # NOTE: this should be checked somewhere else
+            msg = "schema cache directory at '%s' is not accessible. Please set the schema_cache_tree value"% tree
+            raise ValueError(msg)
+        # end check directory 
         return self.settings_value().schema_cache_tree / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
         
     def _serialize_schema(self, schema):
@@ -646,7 +652,7 @@ class ShotgunTypeFactory(ApplicationSettingsMixin):
         
     def type_names(self):
         """@return list of names of all known types, compatible to type_by_name"""
-        return [str(f.basename().split('.')[0]) for f in self._schema_path('foo').dirname().files('*%s' % self.SCHEMA_FILE_EXTENSION)] 
+        return [str(f.basename().split('.')[0]) for f in self._schema_path('notrelevant').dirname().files('*%s' % self.SCHEMA_FILE_EXTENSION)] 
     
     ## -- End Interface -- @}
 

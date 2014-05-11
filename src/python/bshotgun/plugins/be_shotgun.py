@@ -97,7 +97,6 @@ accelerate read access. Please read the online docs for more information."""
 e.g. sqlite:///relative-path.sqlite or mysql://host/db"
         subparser.add_argument('sqlalchemy-url',
                                type=str, 
-                               nargs=1,
                                help=help)
         return self
 
@@ -111,7 +110,7 @@ e.g. sqlite:///relative-path.sqlite or mysql://host/db"
                 from bshotgun.sql import SQLProxyShotgunConnection
                 conn = ProxyShotgunConnection()
                 tf = ShotgunTypeFactory()
-                fetcher = lambda tn: conn.find(tn, list(), fac.schema_by_name(tn).keys())
+                fetcher = lambda tn: conn.find(tn, list(), tf.schema_by_name(tn).keys())
                 SQLProxyShotgunConnection.init_database(getattr(args, 'sqlalchemy-url'), tf, fetcher)
             else:
                 raise AssertionError("Didn't implement subcommand")
@@ -119,5 +118,6 @@ e.g. sqlite:///relative-path.sqlite or mysql://host/db"
         except ValueError as err:
             sys.stdout.write(str(err) + '\n')
             sys.stdout.write("Be sure to set the kvstore values listed with -c\n")
+            raise
             return self.ERROR
         # end convert exceptions

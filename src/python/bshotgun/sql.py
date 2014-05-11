@@ -19,7 +19,7 @@ from sqlalchemy.schema import (Table,
 from sqlalchemy.types import (Integer,
                               Binary)
 
-from marshal import (dumps,
+from cPickle import (dumps,
                      loads)
 from zlib import (compress,
                   decompress)
@@ -31,6 +31,27 @@ from .base import (ProxyMeta,
                    shotgun_schema)
 
 from .schema import sql_shotgun_schema
+
+# -------------------------
+## @name SG Monkey Patch
+# @{
+
+def _apply_sg_patch():
+    """Make SgTimezone type pickable - I am not quite sure why it is the way it is"""
+    try:
+        import shotgun_api3.lib.sgtimezone as sgtz
+    except ImportError:
+        return
+    # end ignore older versions (even though we have to make the patch !)
+
+    sgtz.UTC = sgtz.SgTimezone.UTC
+    sgtz.LocalTimezone = sgtz.SgTimezone.LocalTimezone
+
+_apply_sg_patch()
+
+
+## -- End SG Monkey Patch
+
 
 
 class SQLProxyShotgunConnection(ProxyShotgunConnection):
