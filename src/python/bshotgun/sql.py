@@ -144,6 +144,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
             with connection.begin() as trans:
                 records = list()
                 records_append = records.append
+                rid = 0
                 for rid, record in enumerate(fetch_entity_data_fun(type_name)):
                     records_append({'id' : record['id'], 'properties' : serialize(record)})
                 # end for each record
@@ -151,7 +152,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
                 st = time.time()
                 execute(insert, records)
                 trans.commit()
-                sys.stderr.write("Inserted %i records into %s in %fs\n" % (rid, engine_url, time.time() - st))
+                sys.stderr.write("Inserted %i '%s' records into %s in %fs\n" % (rid, type_name, engine_url, time.time() - st))
                 # end for each type
             # end with transaction
         # end for each shotgun_type/table

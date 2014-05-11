@@ -600,7 +600,7 @@ class ShotgunTypeFactory(object):
         # end obtain schema
         
         return self.ShotgunEntityMetaType(type_name, (self.ShotgunEntityBaseType, ), 
-                                        { 
+                                        {
                                           self.ShotgunEntityMetaType.CLASS_SHOTGUN_SCHEMA_ATTRIBUTE : schema,
                                           self.ShotgunEntityMetaType.CLASS_SHOTGUN_FACTORY_INSTANCE_ATTRIBUTE : self,
                                         })  
@@ -639,7 +639,7 @@ class ShotgunTypeFactory(object):
         
     def type_names(self):
         """@return list of names of all known types, compatible to type_by_name"""
-        return [f.basename().split('.')[0] for f in self._schema_path('foo').dirname().files('*%s' % self.SCHEMA_FILE_EXTENSION)] 
+        return [str(f.basename().split('.')[0]) for f in self._schema_path('foo').dirname().files('*%s' % self.SCHEMA_FILE_EXTENSION)] 
     
     ## -- End Interface -- @}
 

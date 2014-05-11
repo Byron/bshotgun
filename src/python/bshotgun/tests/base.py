@@ -82,7 +82,7 @@ class ShotgunTestDatabase(object):
     
     def _record_storage_path(self, type_name):
         """@return path to shotgun storage data"""
-        return ShotgunTestCase.sample_root(self._sample_name) / 'data.jsonz/%s.json.zip' % type_name
+        return ShotgunTestCase.sample_root(self._sample_name) / ('data.jsonz/%s.json.zip' % type_name)
         
     def _record_fast_storage_path(self, type_name):
         """@return path to file for storing records in a fast cache format"""
@@ -148,7 +148,7 @@ class ShotgunTestDatabase(object):
             if self._use_records_cache and not ppath.isfile():
                 rst = time.time()
                 marshal.dump(records, open(ppath, 'w'))
-                sys.stderr.write("Wrote %i records in %ss into fast cache\n" % (len(records), time.time() - rst))
+                sys.stderr.write("Wrote %i '%s' records in %ss into fast cache\n" % (len(records), type_name, time.time() - rst))
             # end update pickle cache
         # end load pickle cache
         args = (type_name, cache_type, len(records), time.time() - st)
@@ -160,7 +160,7 @@ class ShotgunTestDatabase(object):
         @return self"""
         st = time.time()
         self._serialize_records(self._record_storage_path(type_name))
-        sys.stderr.write("Serialized %i records in %fs\n" % (len(records), time.time() - st))
+        sys.stderr.write("Serialized %i '%s' records in %fs\n" % (len(records), type_name, time.time() - st))
         return self
                 
     

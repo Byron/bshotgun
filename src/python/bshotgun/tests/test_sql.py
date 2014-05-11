@@ -34,6 +34,7 @@ class TestShotgunSQL(ShotgunTestCase):
     def test_sql(self):
         """Check some SQL functionality with our SQL test database"""
         sg = ReadOnlyTestSQLProxyShotgunConnection()
+        assert sg.has_database()
         
         # Write is disabled
         self.failUnlessRaises(AssertionError, sg.batch)
