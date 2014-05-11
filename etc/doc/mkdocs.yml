@@ -1,0 +1,16 @@
+site_name: bshotgun
+site_url: https://byron.github.io/bshotgun
+site_description: "Write better shotgun tools, faster"
+
+repo_url: https://github.com/Byron/bshotgun
+dev_addr: 127.0.0.1:10001
+
+docs_dir: ../../src/md
+site_dir: ../../doc/mkdocs/html
+
+pages:
+- ['index.md', 'Home']
+
+theme: yeti
+
+copyright: Copyright &copy; 2014, <a href="https://www.linkedin.com/in/sebastianthiel">Sebastian Thiel & Contributors</a>.
