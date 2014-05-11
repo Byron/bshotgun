@@ -16,6 +16,7 @@ from .interfaces import IShotgunConnection
 from bapp import ApplicationSettingsMixin
 from bkvstore import KeyValueStoreSchema
 from butility import LazyMixin
+from bcontext import Plugin
 
 
 

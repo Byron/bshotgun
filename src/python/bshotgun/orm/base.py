@@ -561,18 +561,16 @@ class ShotgunTypeFactory(object):
     ## @name Internal Utilities
     # @{
     
-    @classmethod
-    def _schema_path(cls, type_name):
+    def _schema_path(self, type_name):
         """@return path to our schema for the specified shotgun type"""
-        return Path(__file__).dirname() / 'schema' / ('%s%s' % (type_name, cls.SCHEMA_FILE_EXTENSION))
+        return Path(__file__).dirname() / 'schema' / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
         
-    @classmethod
-    def _serialize_schema(cls, schema):
+    def _serialize_schema(self, schema):
         """Serialize the given schema data (for all shotgun types)
         @return schema paths"""
         paths = list()
         for type_name, type_schema in schema.iteritems():
-            paths.append(cls._schema_path(type_name))
+            paths.append(self._schema_path(type_name))
             open(paths[-1], 'w').write(zlib.compress(pickle.dumps(DictObject(type_schema)), 9))
         # end for each type
         return paths
@@ -613,15 +611,14 @@ class ShotgunTypeFactory(object):
     ## @name Schema Database Setup
     # @{
     
-    @classmethod
-    def update_schema(cls, connection):
+    def update_schema(self, connection):
         """Load the schema using the given connection and write the respective schema information to disk
         for later consumption.
         @param cls
         @param connection an IShotgunConnection compatible type
         @note if changes are required, adjust the schema in shotgun and call this method
         @return a list of all paths of the updated or created schema files (one for each type"""
-        return cls._serialize_schema(connection.schema_read())
+        return self._serialize_schema(connection.schema_read())
         
     ## -- End Schema Database Setup -- @}
     

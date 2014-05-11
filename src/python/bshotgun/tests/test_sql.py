@@ -14,11 +14,11 @@ from time import time
 import shotgun_api3
 
 from .base import (ShotgunTestCase,
-                   ReadOnlyTestSQLProxyShotgunConnection)
+                   ReadOnlyTestSQLProxyShotgunConnection,
+                   TestShotgunTypeFactory)
 
 # test import *
 from bshotgun import *
-from bshotgun.orm import ShotgunTypeFactory
 
 
 class TestShotgunSQL(ShotgunTestCase):
@@ -41,7 +41,7 @@ class TestShotgunSQL(ShotgunTestCase):
         # read disabled unless overridden
         self.failUnlessRaises(AssertionError, sg.schema_read)
         
-        fac = ShotgunTypeFactory()
+        fac = TestShotgunTypeFactory()
         
         # Simple query
         sg_id = 612

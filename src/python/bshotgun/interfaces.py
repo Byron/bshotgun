@@ -8,8 +8,8 @@
 """
 __all__ = ['IShotgunConnection']
 
-from bcore import (abstractmethod,
-                   InterfaceBase)
+from butility import (abstractmethod,
+                      InterfaceBase)
 
 class IShotgunConnection(InterfaceBase):
     """Represents a connection to the shotgun database. It obeys the default shotgun API, for reference 

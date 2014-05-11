@@ -6,7 +6,7 @@
 @author Sebastian Thiel
 @copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
-__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection', 'ShotgunTestCase']
+__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection', 'ShotgunTestCase', 'TestShotgunTypeFactory']
 
 import json
 import marshal
@@ -15,7 +15,7 @@ import sys
 import zlib
 
 
-from .base import ShotgunTestCase
+from butility.tests import TestCaseBase
 from butility import Path
 from bshotgun import (ProxyShotgunConnection,
                       SQLProxyShotgunConnection,
@@ -23,14 +23,41 @@ from bshotgun import (ProxyShotgunConnection,
 from bshotgun.orm import ShotgunTypeFactory
 
 
+DEFAULT_DB_SAMPLE='project1'
 
-class ShotgunTestCase(ShotgunTestCase):
+
+class ShotgunTestCase(TestCaseBase):
     """Base for all bshotgun test cases"""
     __slots__ = ()
 
     fixture_root = Path(__file__).dirname()
 
+    # -------------------------
+    ## @name Interface
+    # @{
+    
+    @classmethod
+    def sample_root(cls, sample_name):
+        """@return a path at which all test-sample data is located"""
+        return cls.fixture_path('samples/%s' % sample_name)
+
+    ## -- End Interface -- @}
+
 # end class ShotgunTestCase
+
+
+class TestShotgunTypeFactory(ShotgunTypeFactory):
+    """A factory that supports a sample name, leading to the path from which to read samples"""
+    __slots__ = ('_sample_name')
+
+    def __init__(self, *args, **kwargs):
+        self._sample_name = kwargs.pop('sample_name', DEFAULT_DB_SAMPLE)
+        super(TestShotgunTypeFactory, self).__init__(*args, **kwargs)
+
+    def _schema_path(self, type_name):
+        return ShotgunTestCase.sample_root(self._sample_name) / 'schema.jsonz' / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+
+# end class TestShotgunTypeFactory
 
 
 class ShotgunTestDatabase(object):
@@ -45,7 +72,7 @@ class ShotgunTestDatabase(object):
                 )
     
     
-    def __init__(self, use_records_cache = True, sample_name='project1'):
+    def __init__(self, use_records_cache = True, sample_name=DEFAULT_DB_SAMPLE):
         """Initialize this instance
         @param use_records_cache if True, when 'records' are queried the first time, a fast cache file
         of the records will be created. It loads 60 times faster than json
@@ -53,15 +80,13 @@ class ShotgunTestDatabase(object):
         self._use_records_cache = use_records_cache
         self._sample_name = sample_name
     
-    @classmethod
-    def _record_storage_path(cls, type_name):
+    def _record_storage_path(self, type_name):
         """@return path to shotgun storage data"""
-        return ShotgunTestCase.fixture_path('samples/%s/data.jsonz/%s.json.zip' % (self._sample_name, type_name))
+        return ShotgunTestCase.sample_root(self._sample_name) / 'data.jsonz/%s.json.zip' % type_name
         
-    @classmethod
-    def _record_fast_storage_path(cls, type_name):
+    def _record_fast_storage_path(self, type_name):
         """@return path to file for storing records in a fast cache format"""
-        return cls._record_storage_path(type_name) + '.marshal_tmp'
+        return self._record_storage_path(type_name) + '.marshal_tmp'
         
     @classmethod
     def _serialize_records(cls, path, records):
@@ -78,20 +103,19 @@ class ShotgunTestDatabase(object):
     ## @name Initialization
     # @{
     
-    @classmethod
-    def rebuild_database(cls):
+    def rebuild_database(self):
         """Retrieve all data for all known entity types from shotgun. Known types are determined by the 
         factory schema."""
         conn = ProxyShotgunConnection()
-        fac = ShotgunTypeFactory()
+        fac = TestShotgunTypeFactory(sample_name=self._sample_name)
         
         for type_name in fac.type_names():
             schema = fac._deserialize_schema(fac._schema_path(type_name))
-            path = cls._record_storage_path(type_name)
+            path = self._record_storage_path(type_name)
             sys.stderr.write("Dumping '%s' data to %s ...\n" % (type_name, path))
             st = time.time()
             records = conn.find(type_name, list(), schema.keys())
-            cls._serialize_records(path, records)
+            self._serialize_records(path, records)
             sys.stderr.write("Obtained %i '%s' records in %fs\n" % (len(records), type_name, time.time() - st))
         # end for each schema to read
     
@@ -169,7 +193,6 @@ class ReadOnlyProxyMeta(ProxyMeta):
             return write_not_permitted
         # end handle read-onlyness
     ## -- End Subclass Interface -- @}
-    
 
 # end class ReadOnlyProxyMeta
 
@@ -177,14 +200,15 @@ class ReadOnlyProxyMeta(ProxyMeta):
 class ReadOnlyTestSQLProxyShotgunConnection(SQLProxyShotgunConnection):
     """A front-end to the normal SQLProxyShotgunConnection which simply skips writes 
     and helps to auto-generate it's underlying SQL database"""
-    __slots__ = ()
+    __slots__ = ('_sample_name')
     __metaclass__ = ReadOnlyProxyMeta
     
     
-    def __init__(self, db_url = None):
+    def __init__(self, db_url = None, sample_name=DEFAULT_DB_SAMPLE):
         """Initialize ourselves, making sure we read from our own database, if needed."""
         # If we don't yet have a test-database, rebuild it automatically
         # Must happen before super class is initialized, as it will create a base file right away
+        self._sample_name = sample_name
         if not self.has_database():
             self.rebuild_database()
         # end handle rebuild on demand
@@ -201,39 +225,36 @@ class ReadOnlyTestSQLProxyShotgunConnection(SQLProxyShotgunConnection):
             super(ReadOnlyTestSQLProxyShotgunConnection, self)._set_cache_(name)
         #end handle engine instantiation
         
-    @classmethod
-    def _sqlite_rodb_url(cls):
+    
+    def _sqlite_rodb_url(self):
         """@return an sqlalchemy compatible engine URL to our local READ-ONLY database
         It will be created on the fly and must not be checked in"""
-        return 'sqlite:///%s' % cls._sqlite_rodb_path() 
+        return 'sqlite:///%s' % self._sqlite_rodb_path() 
         
-    @classmethod
-    def _sqlite_rodb_path(cls):
+    def _sqlite_rodb_path(self):
         """@return a path to the designated sqlite database"""
-        return ShotgunTestCase.fixture_path('sqlite.db_tmp')
+        return ShotgunTestCase.fixture_path('sqlite.%s.db_tmp' % self._sample_name)
     
     # -------------------------
     ## @name Test Database Initialization
     # @{
     
-    @classmethod
-    def has_database(cls):
+    def has_database(self):
         """@return True if our database is initialized. If not, rebuild_database() should be called"""
-        return cls._sqlite_rodb_path().isfile()
+        return self._sqlite_rodb_path().isfile()
         
-    @classmethod
-    def rebuild_database(cls):
+    def rebuild_database(self):
         """Build our read-only test database from scratch, using data from the ShotgunTestDatabase
         @return a new instance of our type"""
-        sqlite_path = cls._sqlite_rodb_path()
+        sqlite_path = self._sqlite_rodb_path()
         if sqlite_path.isfile():
             sqlite_path.remove()
         #end clear previous database
         
-        fac = ShotgunTypeFactory()
+        fac = TestShotgunTypeFactory(sample_name=self._sample_name)
         fetcher = ShotgunTestDatabase().records
         
-        return cls(SQLProxyShotgunConnection.init_database(cls._sqlite_rodb_url(), fac, fetcher)._meta)
+        return type(self)(SQLProxyShotgunConnection.init_database(self._sqlite_rodb_url(), fac, fetcher)._meta)
     
     
     

@@ -14,16 +14,19 @@ from .base import ShotgunTestCase
 # test import *
 from bshotgun import *
 from shotgun_api3 import Fault
+from bapp.tests import with_application
 
 
 class TestShotgun(ShotgunTestCase):
     __slots__ = ()
     
 
+    @with_application(from_file=__file__)
     def test_base(self):
         """verify shotgun connection with a mock - for now there is no real datbase access to not slow down anything"""
         sg = ProxyShotgunConnection()
-        self.failUnlessRaises(Fault, svc.find_one, 'Foo', [('id', 'is', 1)])
+        # we are not configured
+        self.failUnlessRaises(ValueError, sg.find_one, 'Foo', [('id', 'is', 1)])
         
     
 

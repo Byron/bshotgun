@@ -18,7 +18,8 @@ from datetime import (datetime,
 
 import shotgun_api3
 from bshotgun.tests import (ShotgunTestDatabase,
-                            ShotgunTestCase)
+                            ShotgunTestCase,
+                            TestShotgunTypeFactory)
 
 # test import *
 from bshotgun.orm import *
@@ -122,7 +123,7 @@ class TestShotgun(ShotgunTestCase):
         conn = ProxyShotgunConnection()
         
         count = 0
-        for count, path in enumerate(ShotgunTypeFactory.update_schema(conn)):
+        for count, path in enumerate(TestShotgunTypeFactory().update_schema(conn)):
             assert path.isfile()
         # end for each path
         assert count
@@ -134,7 +135,7 @@ class TestShotgun(ShotgunTestCase):
         
     def test_factory(self):
         """Test type-creation features"""
-        fac = ShotgunTypeFactory()
+        fac = TestShotgunTypeFactory()
         self.failUnlessRaises(NameError, fac.type_by_name, 'foo')
         sgdb = ShotgunTestDatabase(use_records_cache = True)
         

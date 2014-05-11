@@ -37,7 +37,7 @@ from bkvstore import (KeyValueStoreSchema,
 
 sql_schema = KeyValueStoreSchemaValidator.merge_schemas(
                         (shotgun_schema,
-                            KeyValueStoreSchema(shotgun_schema.key(), 'sql_cache_url' : str })))
+                            KeyValueStoreSchema(shotgun_schema.key(), {'sql_cache_url' : str })))
 
 
 class SQLProxyShotgunConnection(ProxyShotgunConnection):
