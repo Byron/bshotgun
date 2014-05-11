@@ -4,17 +4,17 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="Write better shotgun tools, faster">
         
-        <link rel="canonical" href="https://byron.github.io/bshotgun/">
-        <link rel="shortcut icon" href="./img/favicon.ico">
+        
+        <link rel="canonical" href="https://byron.github.io/bshotgun/plugins/">
+        <link rel="shortcut icon" href="../img/favicon.ico">
 
-        <title>bshotgun</title>
+        <title>BE PLUGINS: setup the ORM from the commandline - bshotgun</title>
 
-        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="./css/prettify-1.0.css" rel="stylesheet">
-        <link href="./css/base.css" rel="stylesheet">
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link href="../css/prettify-1.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -41,7 +41,7 @@
             </button>
 
             <!-- Main title -->
-            <a class="navbar-brand" href=".">bshotgun</a>
+            <a class="navbar-brand" href="..">bshotgun</a>
         </div>
 
         <!-- Expanded navigation -->
@@ -50,18 +50,18 @@
             <ul class="nav navbar-nav">
             
             
-                <li class="active">
-                    <a href=".">Home</a>
+                <li >
+                    <a href="..">Home</a>
                 </li>
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="plugins/">BE PLUGINS: setup the ORM from the commandline</a>
+                        <li class="active">
+                            <a href="./">BE PLUGINS: setup the ORM from the commandline</a>
                         </li>
                     
                     </ul>
@@ -70,7 +70,7 @@
             
             
                 <li >
-                    <a href="license/">License</a>
+                    <a href="../license/">License</a>
                 </li>
             
             
@@ -79,13 +79,13 @@
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 
-                <li class="disabled">
-                    <a rel="next" >
+                <li >
+                    <a rel="next" href="..">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="plugins/">
+                    <a rel="prev" href="../license/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -108,44 +108,32 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#requirements">Requirements</a></li>
+        <li class="main active"><a href="#be-shotgun">be Shotgun</a></li>
         
-    
-        <li class="main "><a href="#infrastructure">Infrastructure</a></li>
-        
-    
-        <li class="main "><a href="#license">License</a></li>
+            <li><a href="#caveats">Caveats</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<p>This project aims to help writing better code when interacting with shotgun, and produce working code faster and more safely.</p>
-<p>It does this by providing an <a href="http://en.wikipedia.org/wiki/Object-relational_mapping">ORM</a> to make accessing shotgun data easier. To test your code, it provides an anonymized dataset based on a real project that can be worked with offline.</p>
-<p>Especially in Europe, Shotgun's performance leaves a lot to be desired, which is why a read-fast-write-slow shotgun connection proxy is available here.</p>
+<p>All plugins described here may be used within the <a href="http://byron.github.io/bcore/be/">be UCT</a>.</p>
+<h2 id="be-shotgun">be Shotgun</h2>
+<p>The <strong>shotgun</strong> command makes commands for initializing our ORM's caches and update them.</p>
 <p><img alt="under construction" src="https://raw.githubusercontent.com/Byron/bcore/master/src/images/wip.png" /></p>
-<h3 id="requirements">Requirements</h3>
+<h3 id="caveats">Caveats</h3>
 <ul>
-<li><a href="https://github.com/Byron/bcore">bcore</a></li>
-<li><a href="https://github.com/shotgunsoftware/python-api">shotgun python API 3</a></li>
+<li>Unless specified differently, all file operations are additive. This means that it will never remove files, even though they wouldn't be needed anymore. When updating caches, you ideally remove the existing files to make sure there are no left-overs. However, failing to do so means no harm either.</li>
+<li>Updating the SQL cache has the danger of missing edits, especially in busy databases. <strong>TODO: write about the auto-update workflow with shotgun-events, and how to time this operation (maybe use event replay to put in what was missed afterwards)</strong></li>
 </ul>
-<h1 id="infrastructure">Infrastructure</h1>
-<ul>
-<li><strong><a href="https://travis-ci.org/Byron/bshotgun">Continuous Integration/Quality Assurance</a></strong></li>
-<li><strong><a href="https://github.com/Byron/bshotgun/issues">Issue Tracker</a></strong></li>
-<li><strong><a href="http://byron.github.io/bshotgun">Documentation</a></strong></li>
-</ul>
-<h1 id="license">License</h1>
-<p>This open source software is licensed under <a href="https://github.com/Byron/bcore/blob/master/LICENSE.md">GNU Lesser General Public License</a></p>
 </div>
         </div>
 
         
 
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-        <script src="./js/bootstrap-3.0.3.min.js"></script>
-        <script src="./js/prettify-1.0.min.js"></script>
-        <script src="./js/base.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/prettify-1.0.min.js"></script>
+        <script src="../js/base.js"></script>
     </body>
 </html>
