@@ -12,9 +12,9 @@ import logging
 from inspect import isroutine
 
 from .interfaces import IShotgunConnection
+from .schema import shotgun_schema
 
 from bapp import ApplicationSettingsMixin
-from bkvstore import KeyValueStoreSchema
 from butility import LazyMixin
 from bcontext import Plugin
 
@@ -24,12 +24,6 @@ from bcontext import Plugin
 ## @name Utilities
 # ------------------------------------------------------------------------------
 ## @{
-
-shotgun_schema = KeyValueStoreSchema('shotgun', {'host' : str,
-                                                 'api_script' : str,
-                                                 'api_key' : str,
-                                                 'http_proxy' : str})
-
 
 log = logging.getLogger('bshotgun.base')
 
@@ -132,15 +126,15 @@ class ProxyShotgunConnection(IShotgunConnection, LazyMixin, ApplicationSettingsM
         
     def _set_cache_(self, name):
         if name == '_proxy':
-            connection_info = self.settings_value()
+            settings = self.settings_value()
             
             # delay import
             import shotgun_api3
             log.info("Connecting to Shotgun ...")
-            self._proxy = shotgun_api3.Shotgun( connection_info.host, 
-                                                connection_info.api_script,
-                                                connection_info.api_key,
-                                                http_proxy = connection_info.http_proxy or None
+            self._proxy = shotgun_api3.Shotgun( settings.host, 
+                                                settings.api_script,
+                                                settings.api_token,
+                                                http_proxy = settings.http_proxy or None
                                                )
             log.info("Shotgun connection established")
         else:

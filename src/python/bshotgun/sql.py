@@ -30,14 +30,7 @@ from .base import (ProxyMeta,
                    ProxyShotgunConnection,
                    shotgun_schema)
 
-from bkvstore import (KeyValueStoreSchema,
-                      KeyValueStoreSchemaValidator)
-
-
-
-sql_schema = KeyValueStoreSchemaValidator.merge_schemas(
-                        (shotgun_schema,
-                            KeyValueStoreSchema(shotgun_schema.key(), {'sql_cache_url' : str })))
+from .schema import sql_shotgun_schema
 
 
 class SQLProxyShotgunConnection(ProxyShotgunConnection):
@@ -49,7 +42,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
                     '_meta'   # Our SQL engine
                 )
     
-    _schema = sql_schema
+    _schema = sql_shotgun_schema
     
     def __init__(self, db_url = None):
         """Initialize this instance with the given database URL

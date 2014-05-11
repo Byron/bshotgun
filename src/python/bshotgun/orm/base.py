@@ -16,6 +16,7 @@ import zlib
 import logging
 
 
+from bapp import ApplicationSettingsMixin
 from butility import (DictObject,
                       LazyMixin,
                       Path)
@@ -26,6 +27,7 @@ from .types import (value_type_map,
                     _ShotgunDateMixin,
                     ShotgunEntityMarker,
                     ShotgunMultiEntityMarker)
+from ..schema import type_factory_schema
 
 log = logging.getLogger('bshotgun.orm')
 
@@ -530,7 +532,7 @@ class ShotgunEntityMeta(PropertySchemaMeta):
 
 
 
-class ShotgunTypeFactory(object):
+class ShotgunTypeFactory(ApplicationSettingsMixin):
     """A utility to help producing custom types and keeping caching them
     
     We rely on a serialized version of the 
@@ -540,6 +542,7 @@ class ShotgunTypeFactory(object):
                 )
     
     SCHEMA_FILE_EXTENSION = '.pickle.zip' 
+    _schema = type_factory_schema
     
     # -------------------------
     ## @name Configuration
@@ -563,7 +566,7 @@ class ShotgunTypeFactory(object):
     
     def _schema_path(self, type_name):
         """@return path to our schema for the specified shotgun type"""
-        return Path(__file__).dirname() / 'schema' / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+        return self.settings_value().schema_cache_tree / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
         
     def _serialize_schema(self, schema):
         """Serialize the given schema data (for all shotgun types)
@@ -636,6 +639,10 @@ class ShotgunTypeFactory(object):
             self._type_map[type_name] = self._resolve_type_name(type_name)
         # end handle type map
         return self._type_map[type_name]
+
+    def schema_by_name(self, type_name):
+        """@return a DictObject representing the shotgun schema schema of an entity with the given typename"""
+        return self._deserialize_schema(self._schema_path(type_name))
         
     def type_names(self):
         """@return list of names of all known types, compatible to type_by_name"""

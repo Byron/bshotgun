@@ -1,6 +1,0 @@
-This directory should contain a cache of the schema definitions, one per shotgun entity type.
-You have control in your program where to get the schema from, and by default it will dynamically retrieve it
-on first connection and attempt to cache it here.
-
-Obviously this will only work on developer machines, but it is something you should keep in mind 
-when distributing the framework - idealy it will contain a schema already as querying it from shotgun takes a long time.

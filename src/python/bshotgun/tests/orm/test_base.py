@@ -111,23 +111,9 @@ def assert_set_entity(entity, prop, value, descriptor, factory):
 ## -- End Utilities -- @}
 
 
-
 class TestShotgun(ShotgunTestCase):
     __slots__ = ()
     
-        
-    def test_factory_update_schema(self):
-        """Tests some methods which may communicate to shotgun"""
-        self.fail("todo: put into be command")
-        
-        conn = ProxyShotgunConnection()
-        
-        count = 0
-        for count, path in enumerate(TestShotgunTypeFactory().update_schema(conn)):
-            assert path.isfile()
-        # end for each path
-        assert count
-        
     def test_factor_create_testdb(self):
         """Trivially create a local copy of all shotgun data and pickle it"""
         self.fail("todo: put into be command")

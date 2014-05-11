@@ -10,6 +10,8 @@ site_dir: ../../doc/mkdocs/html
 
 pages:
 - ['index.md', 'Home']
+- ['plugins.md', 'Plugins', 'BE PLUGINS: setup the ORM from the commandline']
+- ['license.md', 'License']
 
 theme: yeti
 

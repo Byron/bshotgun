@@ -110,7 +110,7 @@ class ShotgunTestDatabase(object):
         fac = TestShotgunTypeFactory(sample_name=self._sample_name)
         
         for type_name in fac.type_names():
-            schema = fac._deserialize_schema(fac._schema_path(type_name))
+            schema = fac.schema_by_name(type_name)
             path = self._record_storage_path(type_name)
             sys.stderr.write("Dumping '%s' data to %s ...\n" % (type_name, path))
             st = time.time()

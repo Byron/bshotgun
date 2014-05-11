@@ -13,3 +13,4 @@ __version__ = Version('0.1.0')
 from .base import *
 from .sql import *
 from .interfaces import *
+from .schema import *

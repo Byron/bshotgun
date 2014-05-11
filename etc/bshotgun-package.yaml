@@ -9,6 +9,13 @@ packages:
       variables:
         PYTHONPATH: src/python
 
+  be:
+    requires:
+      - bshotgun
+    python:
+      import: 
+        - bshotgun.plugins.be_shotgun
+
   nosetests:
     # make sure testing works from the parent assembly
     requires:
