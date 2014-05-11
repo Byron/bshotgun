@@ -3,38 +3,31 @@
 @package bshotgun.orm.base
 @brief Contains factories and base types to deal with shotgun specific issues
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = ['ShotgunTypeFactory', 'ShotgunEntity', 'ShotgunEntityMeta', 
            'ShotgunPropertyDescriptor', 'ShotgunProperty', 
            'ShotgunEntityProperty', 'ShotgunMultiEntityProperty']
 
-from bcore import ILog
-from bcore.utility import (
-                            Singleton,
-                            DictObject,
-                            LazyMixin
-                       )
-from bcore.path import Path
-from bcore.core.properties import (
-                                    PropertyDescriptor,
-                                    PropertyBase,
-                                    PropertySchemaMeta
-                                )
-from .types import (
-                    value_type_map,
-                    _ShotgunDateMixin,
-                    ShotgunEntityMarker,
-                    ShotgunMultiEntityMarker,
-                   )
-                    
-
 from copy import deepcopy
 import cPickle as pickle
 import zlib
+import logging
 
 
-log = service(ILog).new('bshotgun.orm')
+from butility import (DictObject,
+                      LazyMixin,
+                      Path)
+from bproperty import (PropertyDescriptor,
+                       PropertyBase,
+                       PropertySchemaMeta)
+from .types import (value_type_map,
+                    _ShotgunDateMixin,
+                    ShotgunEntityMarker,
+                    ShotgunMultiEntityMarker)
+
+log = logging.getLogger('bshotgun.orm')
 
 
 # -------------------------
@@ -54,7 +47,6 @@ shotgun_gui_entity_types = set((  'Banners',
                                   'NoteTask',
                                   'SavedFilter',
                                   ))
-
 
 ## -- End Global Information -- @}
 
@@ -538,7 +530,7 @@ class ShotgunEntityMeta(PropertySchemaMeta):
 
 
 
-class ShotgunTypeFactory(Singleton):
+class ShotgunTypeFactory(object):
     """A utility to help producing custom types and keeping caching them
     
     We rely on a serialized version of the 

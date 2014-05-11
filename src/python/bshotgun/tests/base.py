@@ -1,11 +1,12 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.tests.db.shotgun.base
+@package bshotgun.tests.base
 @brief Some basic testing utilities
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
-__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection']
+__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection', 'ShotgunTestCase']
 
 import json
 import marshal
@@ -14,13 +15,22 @@ import sys
 import zlib
 
 
-from bcore.tests import TestCaseBase
-from bshotgun import (
-                                ProxyShotgunConnection,
-                                SQLProxyShotgunConnection,
-                                ProxyMeta
-                          )
+from .base import ShotgunTestCase
+from butility import Path
+from bshotgun import (ProxyShotgunConnection,
+                      SQLProxyShotgunConnection,
+                      ProxyMeta)
 from bshotgun.orm import ShotgunTypeFactory
+
+
+
+class ShotgunTestCase(ShotgunTestCase):
+    """Base for all bshotgun test cases"""
+    __slots__ = ()
+
+    fixture_root = Path(__file__).dirname()
+
+# end class ShotgunTestCase
 
 
 class ShotgunTestDatabase(object):
@@ -30,20 +40,23 @@ class ShotgunTestDatabase(object):
     It provides automatic creation of an intermediate 'fast' cache  which is faster to read
     """
     __slots__ = (
-                    '_use_records_cache'
+                    '_use_records_cache',
+                    '_sample_name',
                 )
     
     
-    def __init__(self, use_records_cache = True):
+    def __init__(self, use_records_cache = True, sample_name='project1'):
         """Initialize this instance
         @param use_records_cache if True, when 'records' are queried the first time, a fast cache file
-        of the records will be created. It loads 60 times faster than json"""
+        of the records will be created. It loads 60 times faster than json
+        @param sample_name name of the sample in our fixtures database"""
         self._use_records_cache = use_records_cache
+        self._sample_name = sample_name
     
     @classmethod
     def _record_storage_path(cls, type_name):
         """@return path to shotgun storage data"""
-        return TestCaseBase.fixture_path('db/shotgun/json/%s.json.zip' % type_name)
+        return ShotgunTestCase.fixture_path('samples/%s/data.jsonz/%s.json.zip' % (self._sample_name, type_name))
         
     @classmethod
     def _record_fast_storage_path(cls, type_name):
@@ -75,11 +88,11 @@ class ShotgunTestDatabase(object):
         for type_name in fac.type_names():
             schema = fac._deserialize_schema(fac._schema_path(type_name))
             path = cls._record_storage_path(type_name)
-            print >> sys.stderr, "Dumping '%s' data to %s ..." % (type_name, path)
+            sys.stderr.write("Dumping '%s' data to %s ...\n" % (type_name, path))
             st = time.time()
             records = conn.find(type_name, list(), schema.keys())
             cls._serialize_records(path, records)
-            print >> sys.stderr, "Obtained %i '%s' records in %fs" % (len(records), type_name, time.time() - st)
+            sys.stderr.write("Obtained %i '%s' records in %fs\n" % (len(records), type_name, time.time() - st))
         # end for each schema to read
     
     ## -- End Initialization -- @}
@@ -111,11 +124,11 @@ class ShotgunTestDatabase(object):
             if self._use_records_cache and not ppath.isfile():
                 rst = time.time()
                 marshal.dump(records, open(ppath, 'w'))
-                print >> sys.stderr, "Wrote %i records in %ss into fast cache" % (len(records), time.time() - rst)
+                sys.stderr.write("Wrote %i records in %ss into fast cache\n" % (len(records), time.time() - rst))
             # end update pickle cache
         # end load pickle cache
         args = (type_name, cache_type, len(records), time.time() - st)
-        print "Loaded '%s' dataset(%s) with %i records in %fs" % args
+        sys.stdout.write("Loaded '%s' dataset(%s) with %i records in %fs\n" % args)
         return records
         
     def serialize_records(self, type_name, records):
@@ -123,7 +136,7 @@ class ShotgunTestDatabase(object):
         @return self"""
         st = time.time()
         self._serialize_records(self._record_storage_path(type_name))
-        print >> sys.stderr, "Serialized %i records in %fs" % (len(records), time.time() - st)
+        sys.stderr.write("Serialized %i records in %fs\n" % (len(records), time.time() - st))
         return self
                 
     
@@ -197,7 +210,7 @@ class ReadOnlyTestSQLProxyShotgunConnection(SQLProxyShotgunConnection):
     @classmethod
     def _sqlite_rodb_path(cls):
         """@return a path to the designated sqlite database"""
-        return TestCaseBase.fixture_path('db/shotgun/sqlite.db_tmp')
+        return ShotgunTestCase.fixture_path('sqlite.db_tmp')
     
     # -------------------------
     ## @name Test Database Initialization

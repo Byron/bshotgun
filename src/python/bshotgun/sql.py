@@ -4,52 +4,40 @@
 @brief An SQL backend for shotgun, to allow increasing performance of shotgun interaction of local tools
 
 @note needs sqlalchemy
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = ['SQLProxyShotgunConnection']
-
 
 import sys
 import time
 
-from marshal import (
-                        dumps,
-                        loads
-                    )
-from zlib import (
-                    compress,
-                    decompress
-                 )
+import sqlalchemy
+from sqlalchemy.schema import (Table,
+                               Column,
+                               MetaData)
+from sqlalchemy.types import (Integer,
+                              Binary)
+
+from marshal import (dumps,
+                     loads)
+from zlib import (compress,
+                  decompress)
 from cStringIO import StringIO
 
-import sqlalchemy
-from sqlalchemy.schema import (
-                                  Table,
-                                  Column,
-                                  MetaData,
-                              )
 
-from sqlalchemy.types import (
-                                Integer,
-                                Binary,
-                             )
+from .base import (ProxyMeta,
+                   ProxyShotgunConnection,
+                   shotgun_schema)
 
-from .base import (
-                    ProxyMeta,
-                    ProxyShotgunConnection,
-                    shotgun_schema
-                  )
-
-from bcore.core.kvstore import (
-                                KeyValueStoreSchema,
-                                KeyValueStoreSchemaValidator
-                            )
+from bkvstore import (KeyValueStoreSchema,
+                      KeyValueStoreSchemaValidator)
 
 
 
-sql_schema = KeyValueStoreSchemaValidator.merge_schemas((shotgun_schema,
-                                                        KeyValueStoreSchema(shotgun_schema.key(), 
-                                                                            { 'sql_cache_url' : str })))
+sql_schema = KeyValueStoreSchemaValidator.merge_schemas(
+                        (shotgun_schema,
+                            KeyValueStoreSchema(shotgun_schema.key(), 'sql_cache_url' : str })))
 
 
 class SQLProxyShotgunConnection(ProxyShotgunConnection):
@@ -71,7 +59,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
     def _set_cache_(self, name):
         if name == '_meta':
             # Use kvstore information to get engine URL
-            shotgun = self.context_value()
+            shotgun = self.settings_value()
             assert shotgun.sql_cache_url, "No valid sql_cache_url found"
             self.set_db_url(shotgun.sql_cache_url)
             
@@ -163,7 +151,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
                 st = time.time()
                 execute(insert, records)
                 trans.commit()
-                print >> sys.stderr, "Inserted %i records into %s in %fs" % (rid, engine_url, time.time() - st)
+                sys.stderr.write("Inserted %i records into %s in %fs\n" % (rid, engine_url, time.time() - st))
                 # end for each type
             # end with transaction
         # end for each shotgun_type/table

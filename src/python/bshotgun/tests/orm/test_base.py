@@ -1,9 +1,10 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.tests.db.shotgun.orm.test_base
+@package bshotgun.tests.orm.test_base
 @brief tests for bshotgun.orm
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = []
 
@@ -11,27 +12,20 @@ __all__ = []
 import json
 import sys
 import time
-from datetime import (
-                        datetime,
-                        date
-                     )
-from nose import SkipTest
 
-try:
-    import shotgun_api3
-except ImportError:
-    raise SkipTest("If we are launched without the wrapper, shotgun tests can't work as dependencies are not met")
-# end handle dependencies
+from datetime import (datetime,
+                      date)
 
-from bcore.tests import TestCaseBase
-from bcore.tests.db.shotgun import ShotgunTestDatabase
-import bcore
+import shotgun_api3
+from bshotgun.tests import (ShotgunTestDatabase,
+                            ShotgunTestCase)
 
 # test import *
-from bshotgun.orm import types as sgtypes
 from bshotgun.orm import *
+from bshotgun.orm import types as sgtypes
+
 from bshotgun import ProxyShotgunConnection
-from bcore.utility import DictObject
+from butility import DictObject
 
 
 # ==============================================================================
@@ -117,16 +111,13 @@ def assert_set_entity(entity, prop, value, descriptor, factory):
 
 
 
-class TestShotgun(TestCaseBase):
+class TestShotgun(ShotgunTestCase):
     __slots__ = ()
     
         
     def test_factory_update_schema(self):
         """Tests some methods which may communicate to shotgun"""
-        # Only to be updated once in a while
-        #######
-        return
-        #######
+        self.fail("todo: put into be command")
         
         conn = ProxyShotgunConnection()
         
@@ -138,10 +129,7 @@ class TestShotgun(TestCaseBase):
         
     def test_factor_create_testdb(self):
         """Trivially create a local copy of all shotgun data and pickle it"""
-        # Must only run on demand
-        #########
-        return
-        #########
+        self.fail("todo: put into be command")
         ShotgunTestDatabase.rebuild_database()
         
     def test_factory(self):
@@ -210,7 +198,7 @@ class TestShotgun(TestCaseBase):
                 #end for each schema entry
                 
                 if rid and rid % info_every == 0:
-                    print >> sys.stderr, "Processed %s record %i/%i" % (type_name, rid, len(records))
+                    sys.stderr.write("Processed %s record %i/%i\n" % (type_name, rid, len(records)))
                 # end provide info
                 
                 # NOTE: We break here as it should be enough

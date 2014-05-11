@@ -1,9 +1,10 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.tests.db.shotgun
+@package bshotgun.tests
 @brief Tests for bshotgun
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 from .base import *
 

@@ -1,0 +1,15 @@
+packages:
+  bshotgun:
+    # trees must be set by the parent assembly
+    requires:
+      - bcore
+      - shotgun-python-api
+      - sqlalchemy
+    environment:
+      variables:
+        PYTHONPATH: src/python
+
+  nosetests:
+    # make sure testing works from the parent assembly
+    requires:
+      - bshotgun

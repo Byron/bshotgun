@@ -3,17 +3,21 @@
 @package bshotgun.base
 @brief Implementations for use with the shotgun database
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = ['shotgun_schema', 'ProxyShotgunConnection', 'ProxyMeta']
 
-import bcore
-from .interfaces import IShotgunConnection
-from bcore.core.component import EnvironmentStackContextClient
-from bcore.core.kvstore import KeyValueStoreSchema
-from bcore.utility import LazyMixin
-
+import logging
 from inspect import isroutine
+
+from .interfaces import IShotgunConnection
+
+from bapp import ApplicationSettingsMixin
+from bkvstore import KeyValueStoreSchema
+from butility import LazyMixin
+
+
 
 # ==============================================================================
 ## @name Utilities
@@ -26,7 +30,7 @@ shotgun_schema = KeyValueStoreSchema('shotgun', {'host' : str,
                                                  'http_proxy' : str})
 
 
-log = service(bcore.ILog).new('bshotgun.base')
+log = logging.getLogger('bshotgun.base')
 
 
 class ProxyMeta(IShotgunConnection.__metaclass__):
@@ -101,7 +105,7 @@ class PluginProxyMeta(ProxyMeta, Plugin.__metaclass__):
 
 
 
-class ProxyShotgunConnection(IShotgunConnection, LazyMixin, EnvironmentStackContextClient):
+class ProxyShotgunConnection(IShotgunConnection, LazyMixin, ApplicationSettingsMixin):
     """Wraps an actual shotgun connection object and redirects all calls to it.
     
     It implements support for a proxy server
@@ -127,9 +131,9 @@ class ProxyShotgunConnection(IShotgunConnection, LazyMixin, EnvironmentStackCont
         
     def _set_cache_(self, name):
         if name == '_proxy':
-            connection_info = self.context_value()
+            connection_info = self.settings_value()
             
-            # delay import not to slow downloading of bcore !
+            # delay import
             import shotgun_api3
             log.info("Connecting to Shotgun ...")
             self._proxy = shotgun_api3.Shotgun( connection_info.host, 

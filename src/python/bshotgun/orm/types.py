@@ -3,23 +3,20 @@
 @package bshotgun.orm.types
 @brief Custom types representing respective shotgun types
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = ['value_type_map', 'ShotgunEntityMarker', 'ShotgunMultiEntityMarker']
 
-from datetime import (
-                        datetime,
-                        date
-                     )
-from time import (
-                    strptime,
-                    gmtime
-                 )
+import logging
+from datetime import (datetime,
+                      date)
+from time import (strptime,
+                  gmtime)
 
-from bcore import ILog
-from bcore.utility import DictObject
+from butility import DictObject
 
-log = service(ILog).new('bshotgun.orm.types')
+log = logging.getLogger('bshotgun.orm.types')
 
 
 class ShotgunEntityMarker(object):

@@ -1,14 +1,15 @@
 #-*-coding:utf-8-*-
 """
 @package bshotgun
-@brief Initializes the shotgun database implementation
+@brief Initializes the shotgun database integration
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
+from __future__ import absolute_import
+from butility import Version
+__version__ = Version('0.1.0')
 
 from .base import *
 from .sql import *
 from .interfaces import *
-# TODO: components must not be imported automatically. Instead, import them in your program, or configure 
-# The wrapper to do so for you (i.e. package.python.import = bshotgun.components)
-from .components import *

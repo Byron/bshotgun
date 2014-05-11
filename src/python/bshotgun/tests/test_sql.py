@@ -1,39 +1,32 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.tests.db.shotgun.test_sql
+@package bshotgun.tests.test_sql
 @brief tests for bshotgun.sql
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = []
 
+import sys
 from time import time
-from nose import SkipTest
 
-try:
-    import shotgun_api3
-except ImportError:
-    raise SkipTest("If we are launched without the wrapper, shotgun tests can't work as dependencies are not met")
-# end handle dependencies
+import shotgun_api3
 
-from bcore.tests import TestCaseBase
-from bcore.tests.db.shotgun import ReadOnlyTestSQLProxyShotgunConnection
+from .base import (ShotgunTestCase,
+                   ReadOnlyTestSQLProxyShotgunConnection)
 
 # test import *
 from bshotgun import *
 from bshotgun.orm import ShotgunTypeFactory
-from bcore import IShotgunConnection
-from bcore.core.component import ServiceNotFound
 
 
-class TestShotgunSQL(TestCaseBase):
+class TestShotgunSQL(ShotgunTestCase):
     __slots__ = ()
     
     def test_init_sqldb(self):
         """Initialize a new shotgun database"""
-        ###############
-        return
-        ###############
+        self.fail("todo: put this code into a bsubcommand")
         # NOTE: only for testing this operation - it will be done automatically by decorators, and on demand,
         # using the local disk as cache.
         ReadOnlyTestSQLProxyShotgunConnection.rebuild_database()
@@ -75,7 +68,7 @@ class TestShotgunSQL(TestCaseBase):
                     total_record_count += len(data)
                     fetch_count += 1
                     if data:
-                        print "Fetched %i records in %fs" % (len(data), time() - st)
+                        sys.stdout.write("Fetched %i records in %fs" % (len(data), time() - st))
                     # end performance printing
                     
                     if limit:
@@ -97,7 +90,7 @@ class TestShotgunSQL(TestCaseBase):
                 # end for each limit
             # end for each filter
         # end for each type
-        print "Received a total of %i records in %i fetches in %fs" % (total_record_count, fetch_count, time() - tst)
+        sys.stdout.write("Received a total of %i records in %i fetches in %fs\n" % (total_record_count, fetch_count, time() - tst))
         
         
     

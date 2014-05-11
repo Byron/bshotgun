@@ -1,16 +1,15 @@
 #-*-coding:utf-8-*-
 """
-@package bcore.core.shotgun.interfaces
-@brief Provides an interface to access a shotgun database, pre-initialized and ready to go
+@package bshotgun.interfaces
+@brief Provides an interface to access a shotgun database
 
-@copyright 2013 Sebastian Thiel
+@author Sebastian Thiel
+@copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
 __all__ = ['IShotgunConnection']
 
-from bcore import (
-                abstractmethod,
-                InterfaceBase
-                )
+from bcore import (abstractmethod,
+                   InterfaceBase)
 
 class IShotgunConnection(InterfaceBase):
     """Represents a connection to the shotgun database. It obeys the default shotgun API, for reference 
@@ -125,5 +124,5 @@ class IShotgunConnection(InterfaceBase):
     def reset_user_agent(self):
         pass
         
-# end class ShotgunConnection
+# end class IShotgunConnection
 
