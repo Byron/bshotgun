@@ -25,18 +25,28 @@ from bshotgun import combined_shotgun_schema
 # ------------------------------------------------------------------------------
 ## @{
 
-class TreeShotgunTypeFactory(ShotgunTypeFactory):
+class CommandShotgunTypeFactory(ShotgunTypeFactory):
     """Writes everything into a particular tree"""
-    __slots__ = ('_tree')
+    __slots__ = ('_tree',
+                 '_type_whitelist')
 
     def __init__(self, *args, **kwargs):
-        self._tree = kwargs.pop('write_to')
-        super(TreeShotgunTypeFactory, self).__init__(*args, **kwargs)
+        self._tree = kwargs.pop('write_to', None)
+        self._type_whitelist = set(kwargs.pop('allowed_types', tuple()))
+        super(CommandShotgunTypeFactory, self).__init__(*args, **kwargs)
 
     def _schema_path(self, type_name):
+        if not self._tree:
+            return super(CommandShotgunTypeFactory, self)._schema_path(type_name)
         return self._tree / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+
+    def type_names(self):
+        types = super(CommandShotgunTypeFactory, self).type_names()
+        if self._type_whitelist:
+            types = set(types) & self._type_whitelist
+        return types
     
-# end class TreeShotgunTypeFactory
+# end class CommandShotgunTypeFactory
 
 ## -- End Utility Types -- @}
 
@@ -98,6 +108,14 @@ e.g. sqlite:///relative-path.sqlite or mysql://host/db"
         subparser.add_argument('sqlalchemy-url',
                                type=str, 
                                help=help)
+
+        help = "A single entity type to include in the cache. If unset, all will be pulled.\
+Mainly used for debugging"
+        subparser.add_argument('--type',
+                               nargs=1,
+                               type=str,
+                               dest='allowed_types',
+                               help=help)
         return self
 
     def execute(self, args, remaining_args):
@@ -105,11 +123,11 @@ e.g. sqlite:///relative-path.sqlite or mysql://host/db"
             self.apply_overrides(combined_shotgun_schema, args)
             if args.operation == self.OP_SCHEMA_CACHE:
                 conn = ProxyShotgunConnection()
-                TreeShotgunTypeFactory(write_to=args.tree).update_schema(conn)
+                CommandShotgunTypeFactory(write_to=args.tree).update_schema(conn)
             elif args.operation == self.OP_SQL_CACHE:
                 from bshotgun.sql import SQLProxyShotgunConnection
                 conn = ProxyShotgunConnection()
-                tf = ShotgunTypeFactory()
+                tf = CommandShotgunTypeFactory(allowed_types=args.allowed_types)
                 fetcher = lambda tn: conn.find(tn, list(), tf.schema_by_name(tn).keys())
                 SQLProxyShotgunConnection.init_database(getattr(args, 'sqlalchemy-url'), tf, fetcher)
             else:
