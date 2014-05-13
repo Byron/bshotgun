@@ -1,0 +1,8 @@
+
+packages:
+  be:
+    requires:
+      - bshotgun
+    python:
+      import: 
+        - bshotgun.tests.plugins.be_shotgun_tests

@@ -82,7 +82,7 @@ class ShotgunTestDatabase(object):
     
     def _record_storage_path(self, type_name):
         """@return path to shotgun storage data"""
-        return ShotgunTestCase.sample_root(self._sample_name) / ('data.jsonz/%s.json.zip' % type_name)
+        return ShotgunTestCase.sample_root(self._sample_name) / ('data.jsonz/%s.json.z' % type_name)
         
     def _record_fast_storage_path(self, type_name):
         """@return path to file for storing records in a fast cache format"""

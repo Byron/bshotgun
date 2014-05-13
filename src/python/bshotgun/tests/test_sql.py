@@ -23,13 +23,6 @@ from bshotgun import *
 
 class TestShotgunSQL(ShotgunTestCase):
     __slots__ = ()
-    
-    def test_init_sqldb(self):
-        """Initialize a new shotgun database"""
-        self.fail("todo: put this code into a bsubcommand")
-        # NOTE: only for testing this operation - it will be done automatically by decorators, and on demand,
-        # using the local disk as cache.
-        ReadOnlyTestSQLProxyShotgunConnection.rebuild_database()
         
     def test_sql(self):
         """Check some SQL functionality with our SQL test database"""
