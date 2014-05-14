@@ -572,7 +572,7 @@ class ShotgunTypeFactory(ApplicationSettingsMixin):
             msg = "schema cache directory at '%s' is not accessible. Please set the schema_cache_tree value"% tree
             raise ValueError(msg)
         # end check directory 
-        return self.settings_value().schema_cache_tree / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+        return tree / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
         
     def _serialize_schema(self, schema):
         """Serialize the given schema data (for all shotgun types)

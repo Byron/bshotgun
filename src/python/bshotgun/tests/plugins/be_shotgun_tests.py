@@ -11,7 +11,8 @@ from urlparse import urlparse
 from hashlib import md5
 
 import bapp
-from butility import Version
+from butility import (Version,
+                      DictObject)
 from be import BeSubCommand
 from bcmd import (InputError,
                   CommandlineOverridesMixin)
@@ -22,6 +23,28 @@ from bshotgun import (ProxyShotgunConnection,
 from bshotgun.orm import ShotgunTypeFactory
 from bshotgun.tests import (ShotgunTestDatabase,
                             TestShotgunTypeFactory)
+
+
+# -------------------------
+## @name Utility Types
+# @{
+
+class WriterShotgunTypeFactory(ShotgunTypeFactory):
+    """Writes schema to a specific path"""
+    __slots__ = ('_tree')
+
+    def __init__(self, tree):
+        ShotgunTypeFactory.__init__(self)
+        self._tree = tree
+        self._tree.makedirs()
+
+    def settings_value(self):
+        return DictObject({'schema_cache_tree' : self._tree})    
+
+# end class WriterShotgunTypeFactory
+
+
+## -- End Utility Types -- @}
 
 
 class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plugin_type()):
@@ -44,7 +67,7 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
     # @{
 
     def validate_args(self, args):
-        """Inserts 'fetcher' function and 'type_names' instance into the args namespace
+        """Inserts 'fetcher' function and 'type_names' list into the args namespace
         @throws InputError if something is wrong with our argument logic
 {
 
@@ -73,7 +96,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                 for rec in records:
                     for k,v in rec.iteritems():
                         if isinstance(v, basestring):
-                            rec[k] = unicode(md5(v.encode('utf-16')).hexdigest()) + u'😄'
+                            if isinstance(v, unicode):
+                                v = v.encode('utf-8')
+                            rec[k] = unicode(md5(v).hexdigest()) + u'😄'
                         # end hash value
                     # end for each value
                 # end for each record
@@ -86,7 +111,10 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
             # SHOTGUN
             #########
             conn = ProxyShotgunConnection()
-            fac = ShotgunTypeFactory()
+            fac = WriterShotgunTypeFactory(TestShotgunTypeFactory.schema_tree(dsname))
+
+            # update schema from DB
+            fac.update_schema(conn)
 
             args.fetcher = lambda tn: scrambler(conn.find(tn, list(), fac.schema_by_name(tn).keys()))
             args.type_names = fac.type_names()
@@ -135,6 +163,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
 
         Provided a source of the data, you can output it to the '%s' format used by tests.
         By default, data will be scrambled, which will effectively hash all strings.
+
+        IMPORTANT: We don't write the schema - you will have to do this youself using the 'update-schema-cache' 
+        subcommand of the 'shotgun' be command, unless you retrieve everything from the database
         """ % self.FORMAT_JSONZ
 
         subparser = factory.add_parser('build-dataset', description=description, help=help)

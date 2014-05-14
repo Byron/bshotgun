@@ -65,7 +65,18 @@ class TestShotgunTypeFactory(ShotgunTypeFactory):
         super(TestShotgunTypeFactory, self).__init__(*args, **kwargs)
 
     def _schema_path(self, type_name):
-        return dataset_tree(self._sample_name) / self.SCHEMA_SUBDIR / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+        return self.schema_tree(self._sample_name) / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+
+    # -------------------------
+    ## @name Interface
+    # @{
+
+    @classmethod
+    def schema_tree(cls, sample_name):
+        """@return path for schema for given sample, use with update_schema()"""
+        return dataset_tree(sample_name) / cls.SCHEMA_SUBDIR
+    
+    ## -- End Interface -- @}
 
 # end class TestShotgunTypeFactory
 
@@ -93,7 +104,7 @@ class ShotgunTestDatabase(object):
 
     def _record_storage_path(self, type_name):
         """@return path to shotgun storage data"""
-        return dataset_tree(self._sample_name) / self.DATASET_SUBDIR / ('%s.json.z' % type_name)
+        return self.data_tree(self._sample_name) / ('%s.json.z' % type_name)
         
     def _record_fast_storage_path(self, type_name):
         """@return path to file for storing records in a fast cache format"""
@@ -118,10 +129,15 @@ class ShotgunTestDatabase(object):
         """Retrieve all data for all known entity types from some source shotgun.
         @param type_names an iterable of types to fetch from fetcher
         @param fetcher f(type_name) => [entity_data,...], whereas entity_data is a dict of values
-        matching the entity-schea
+        matching the entity-schema
+        @note we don't write the schema - this should be done 
         @note may overwrite existing data"""
-        for subdir in (ShotgunTestDatabase.DATASET_SUBDIR, TestShotgunTypeFactory.SCHEMA_SUBDIR):
-            (dataset_tree(self._sample_name) / subdir).makedirs()
+        for dir in (self.data_tree(self._sample_name), TestShotgunTypeFactory.schema_tree(self._sample_name)):
+            try:
+                dir.makedirs()
+            except OSError:
+                pass
+            # end ignore it may exist
         # end for each dir to create
 
         for type_name in type_names:
@@ -139,6 +155,11 @@ class ShotgunTestDatabase(object):
     # -------------------------
     ## @name Interface
     # @{
+
+    @classmethod
+    def data_tree(cls, sample_name):
+        """@return directory to our data set"""
+        return dataset_tree(sample_name) / cls.DATASET_SUBDIR
 
     def exists(self):
         """@return True if the dataset seems to exist"""
