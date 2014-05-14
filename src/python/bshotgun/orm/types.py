@@ -124,7 +124,7 @@ class ShotgunDateTime(_ShotgunDateMixin, datetime):
 # end class ShotgunDateTime
 
 
-class ShotgunPassword(_ShotgunTypeMixin, str):
+class ShotgunPassword(_ShotgunTypeMixin, unicode):
     """A string like '*******'"""
     __slots__ = ()
 

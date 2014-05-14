@@ -69,8 +69,15 @@ def scramble_nested_strings(records, whitelist, transformer=lambda s: s):
             d = ShotgunDate(v)
             if isinstance(d, (date, datetime)):
                 return v
+            # if it's a number, don't do it. Yes, sg stores numbers as strings (sometimes)
+            d = int(v)
+            # we don't bother fixing this one ... have to deal with it anyway when this comes from sg
+            return v
         except ValueError:
-            return unicode(md5(v).hexdigest()) + u'😄'
+            # it's not a date.
+            pass
+        # end
+        return unicode(md5(v).hexdigest()) + u'😄'
 
     def scramble_value(v):
         """scramble a value of any type recursively"""
