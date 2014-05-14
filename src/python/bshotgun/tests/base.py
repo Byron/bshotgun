@@ -23,7 +23,7 @@ from bshotgun import (ProxyShotgunConnection,
 from bshotgun.orm import ShotgunTypeFactory
 
 
-DEFAULT_DB_SAMPLE='project1'
+DEFAULT_DB_SAMPLE='scrambled-ds1'
 
 
 def dataset_tree(sample_name):

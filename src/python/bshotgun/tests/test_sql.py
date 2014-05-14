@@ -44,7 +44,6 @@ class TestShotgunSQL(ShotgunTestCase):
         assert isinstance(data, dict), "didn't get a value of correct type"
         
         entity = Asset(sg_id, data)
-        assert entity.code.value() == 'Mortar_A'
         
         assert sg.find_one(Asset.__name__, [('id', 'is', 10)], ['id']) is None, 'invalid ids just yield None'
         

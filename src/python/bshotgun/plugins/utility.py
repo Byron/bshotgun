@@ -42,12 +42,8 @@ class TypeStreamer(object):
         """Call writer with the serialized object information"""
         for tn in self._type_names:
             for rec in self._fetcher(tn):
-                for k, v in rec.iteritems():
-                    if isinstance(v, datetime):
-                        rec[k] = datetime_to_date_time_string(v)
-                # end fix datetime
                 writer(json.dumps(rec, check_circular=False, ensure_ascii=True,
-                                       allow_nan=True, indent=2))
+                                       allow_nan=True, indent=2, default=str))
             # end for record
         # end for each tn
     ## -- End Interface -- @}

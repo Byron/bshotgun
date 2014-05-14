@@ -12,8 +12,7 @@ import sys
 
 import bapp
 from butility import (Version,
-                      Path,
-                      datetime_to_date_time_string)
+                      Path)
 from be import BeSubCommand
 from bshotgun import (ProxyShotgunConnection,
                       SQLProxyShotgunConnection)

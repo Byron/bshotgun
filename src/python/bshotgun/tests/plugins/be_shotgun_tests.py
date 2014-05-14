@@ -9,6 +9,8 @@ __all__ = []
 
 import sys
 from hashlib import md5
+from datetime import (date,
+                      datetime)
 
 import bapp
 from butility import (Version,
@@ -21,6 +23,7 @@ from bshotgun import (ProxyShotgunConnection,
                       SQLProxyShotgunConnection,
                       combined_shotgun_schema)
 from bshotgun.orm import ShotgunTypeFactory
+from bshotgun.orm.types import ShotgunDate
 from bshotgun.tests import (ShotgunTestDatabase,
                             TestShotgunTypeFactory)
 
@@ -52,17 +55,22 @@ class WriterShotgunTypeFactory(ShotgunTypeFactory):
 def scramble_nested_strings(records, whitelist, transformer=lambda s: s):
     """Scrambles all strings in any nested structure, unless the value in question is in the 
     whitelist. transformer will be called to generate a value which is checked for whitelist membership.
-    As special case, we don't scramble values whose key is 'type'"""
+    As special case, we don't scramble values whose key is 'type'. We also don't scramble dates"""
     whitelist = set(whitelist)
 
     def scramble_string(v):
         """scramble a string"""
         if transformer(v) in whitelist:
             return v
-        # don't scramble types
         if isinstance(v, unicode):
             v = v.encode('utf-8')
-        return unicode(md5(v).hexdigest()) + u'😄'
+        # don't scramble dates
+        try:
+            d = ShotgunDate(v)
+            if isinstance(d, (date, datetime)):
+                return v
+        except ValueError:
+            return unicode(md5(v).hexdigest()) + u'😄'
 
     def scramble_value(v):
         """scramble a value of any type recursively"""
@@ -74,6 +82,7 @@ def scramble_nested_strings(records, whitelist, transformer=lambda s: s):
             for vid, item in enumerate(v):
                 v[vid] = scramble_value(item)
             return v
+        return v
         # end hash value
 
     def scramble_dict(rec):
