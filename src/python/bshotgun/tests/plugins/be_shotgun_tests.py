@@ -59,6 +59,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
     # @{
 
     FORMAT_JSONZ = 'jsonz'
+
+    OP_BUILD = 'build-dataset'
+    OP_SHOW = 'show'
     
     ## -- End Constants -- @}
 
@@ -88,6 +91,10 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
             raise InputError("Dataset named '%s' did already exist - please choose a different one" % dsname)
         # end
 
+        if args.operation != self.OP_BUILD:
+            args.scrambling_disabled = True
+        # end never scramble outside of build mode
+
         # SETUP SCRAMBLER
         if args.scrambling_disabled:
             scrambler = lambda r: r            
@@ -114,7 +121,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
             fac = WriterShotgunTypeFactory(TestShotgunTypeFactory.schema_tree(dsname))
 
             # update schema from DB
-            fac.update_schema(conn)
+            if args.operation == self.OP_BUILD:
+                fac.update_schema(conn)
+            # end don't wrote in query mode
 
             args.fetcher = lambda tn: scrambler(conn.find(tn, list(), fac.schema_by_name(tn).keys()))
             args.type_names = fac.type_names()
@@ -137,7 +146,6 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                 args.type_names = fac.type_names()
             # end handle value
         # end handle source
-
 
         return args
     
@@ -168,7 +176,7 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
         subcommand of the 'shotgun' be command, unless you retrieve everything from the database
         """ % self.FORMAT_JSONZ
 
-        subparser = factory.add_parser('build-dataset', description=description, help=help)
+        subparser = factory.add_parser(self.OP_BUILD, description=description, help=help)
 
         default = 'shotgun'
         help = "The source of the data for the sample db, default is '%s'.\
