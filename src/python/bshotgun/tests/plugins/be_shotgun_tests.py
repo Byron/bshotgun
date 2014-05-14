@@ -8,7 +8,6 @@
 __all__ = []
 
 import sys
-from urlparse import urlparse
 from hashlib import md5
 
 import bapp
@@ -25,9 +24,12 @@ from bshotgun.orm import ShotgunTypeFactory
 from bshotgun.tests import (ShotgunTestDatabase,
                             TestShotgunTypeFactory)
 
+from bshotgun.plugins.utility import (is_sqlalchemy_url,
+                                      TypeStreamer)
+
 
 # -------------------------
-## @name Utility Types
+## @name Utilities
 # @{
 
 class WriterShotgunTypeFactory(ShotgunTypeFactory):
@@ -47,7 +49,48 @@ class WriterShotgunTypeFactory(ShotgunTypeFactory):
 # end class WriterShotgunTypeFactory
 
 
-## -- End Utility Types -- @}
+def scramble_nested_strings(records, whitelist, transformer=lambda s: s):
+    """Scrambles all strings in any nested structure, unless the value in question is in the 
+    whitelist. transformer will be called to generate a value which is checked for whitelist membership.
+    As special case, we don't scramble values whose key is 'type'"""
+    whitelist = set(whitelist)
+
+    def scramble_string(v):
+        """scramble a string"""
+        if transformer(v) in whitelist:
+            return v
+        # don't scramble types
+        if isinstance(v, unicode):
+            v = v.encode('utf-8')
+        return unicode(md5(v).hexdigest()) + u'😄'
+
+    def scramble_value(v):
+        """scramble a value of any type recursively"""
+        if isinstance(v, basestring):
+            return scramble_string(v)
+        elif isinstance(v, dict):
+            return scramble_dict(v)
+        elif isinstance(v, (tuple, list)):
+            for vid, item in enumerate(v):
+                v[vid] = scramble_value(item)
+            return v
+        # end hash value
+
+    def scramble_dict(rec):
+        """scrambles a dict, recursively traversing the tree"""
+        for k,v in rec.iteritems():
+            if k == 'type':
+                continue
+            rec[k] = scramble_value(v)
+        # end for each value
+        return rec
+    # end scramble
+
+    return scramble_value(records)
+# end scrambles records in place
+
+
+## -- End Utilities -- @}
 
 
 class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plugin_type()):
@@ -101,20 +144,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
 
         # SETUP SCRAMBLER
         if args.scrambling_disabled:
-            scrambler = lambda r: r            
+            scrambler = lambda r, tn: r
         else:
-            def scrambler(records):
-                for rec in records:
-                    for k,v in rec.iteritems():
-                        if isinstance(v, basestring):
-                            if isinstance(v, unicode):
-                                v = v.encode('utf-8')
-                            rec[k] = unicode(md5(v).hexdigest()) + u'😄'
-                        # end hash value
-                    # end for each value
-                # end for each record
-                return records
-            # end scrambles records in place
+            scrambler = scramble_nested_strings
         # end scrambler
 
         # FIGURE OUT SOURCE AND SETUP TYPES
@@ -131,16 +163,16 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                 fac.update_schema(conn)
             # end don't wrote in query mode
 
-            args.fetcher = lambda tn: scrambler(conn.find(tn, list(), fac.schema_by_name(tn).keys()))
+            args.fetcher = lambda tn: scrambler(conn.find(tn, list(), fac.schema_by_name(tn).keys()), fac.type_names())
             args.type_names = fac.type_names()
         else:
-            url = urlparse(args.source)
-            if url.scheme:
+            if is_sqlalchemy_url(args.source):
                 # SQLALCHEMY
                 ############
                 db = SQLProxyShotgunConnection(db_url=args.source)
 
-                args.fetcher = lambda tn: scrambler(db.find(tn, [], ['id']))
+                # type-names are lower case for sql tables, so we have to transform the value for comparison
+                args.fetcher = lambda tn: scrambler(db.find(tn, [], ['id']), db.type_names(), transformer = lambda v: v.lower())
                 args.type_names = db.type_names()
             else:
                 # JSONZ
@@ -148,7 +180,7 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                 fac = TestShotgunTypeFactory(sample_name=args.source)
                 db = ShotgunTestDatabase(sample_name=args.source)
 
-                args.fetcher = lambda tn: scrambler(db.records(tn))
+                args.fetcher = lambda tn: scrambler(db.records(tn), fac.type_names())
                 args.type_names = fac.type_names()
             # end handle value
         # end handle source
@@ -219,6 +251,18 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                                 metavar='NAME-OR-SQLURL',
                                 nargs=1,
                                 help=help)
+
+        help = "If set, show will only show type names"
+        subparser.add_argument('--list-types-only',
+                               dest='list_types_only',
+                               action='store_true',
+                               help=help)
+
+        help = "The types to show. If unset, all types will be shown"
+        subparser.add_argument('-t', '--types',
+                                dest='only_these_types',
+                                nargs='+',
+                                help=help)
         
         return self
 
@@ -228,8 +272,19 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
         if args.operation == self.OP_BUILD:
             ShotgunTestDatabase(sample_name=getattr(args, 'db-name')).rebuild_database(args.type_names, args.fetcher)
         elif args.operation == self.OP_SHOW:
-            from bshotgun.plugins.be_shotgun import TypeStreamer
-            TypeStreamer(args.fetcher, args.type_names).stream(sys.stdout.write)
+            if args.list_types_only:
+                for tn in args.type_names:
+                    sys.stdout.write(tn + '\n')
+                # end print types
+                return self.SUCCESS
+            # end list only
+            type_names = args.type_names
+            if args.only_these_types:
+                type_names = sorted(set(args.type_names) & set(args.only_these_types))
+            # end filter type_names
+            if not type_names:
+                raise InputError("Didn't find any type-names for display - is the schema set or available ?")
+            TypeStreamer(args.fetcher, type_names).stream(sys.stdout.write)
         else:
             raise NotImplemented(self.operation)
         return self.SUCCESS

@@ -9,10 +9,6 @@
 __all__ = ['ShotgunBeSubCommand']
 
 import sys
-import json
-from datetime import datetime
-
-from urlparse import urlparse
 
 import bapp
 from butility import (Version,
@@ -26,16 +22,14 @@ from bcmd import CommandlineOverridesMixin
 
 from bshotgun import combined_shotgun_schema
 
+from .utility import (is_sqlalchemy_url,
+                      TypeStreamer)
+
+
 # ==============================================================================
 ## @name Utility Types
 # ------------------------------------------------------------------------------
 ## @{
-
-def is_sqlalchemy_url(url):
-    """@return True if this is an sqlalchemy URL
-    @note for now, any URL will do"""
-    return bool(urlparse(url).scheme)
-
 
 class CommandShotgunTypeFactory(ShotgunTypeFactory):
     """Writes everything into a particular tree"""
@@ -57,40 +51,6 @@ class CommandShotgunTypeFactory(ShotgunTypeFactory):
         if self._type_blacklist:
             types = set(types) - self._type_blacklist
         return types
-
-
-class TypeStreamer(object):
-    """Streams shotgun data using a simple fetcher interface, with fixing for sg datetime objects"""
-    __slots__ = ('_fetcher', '_type_names')
-
-    def __init__(self, fetcher, type_names):
-        """@param fetcher f(type_name) => iter([dict_like, ...])
-        @param type_names list of names for the fetcher"""
-        self._fetcher = fetcher
-        self._type_names = type_names
-
-    # -------------------------
-    ## @name Interface
-    # @{
-
-    def stream(self, writer):
-        """Call writer with the serialized object information"""
-        for tn in self._type_names:
-            for rec in self._fetcher(tn):
-                for k, v in rec.iteritems():
-                    if isinstance(v, datetime):
-                        rec[k] = datetime_to_date_time_string(v)
-                # end fix datetime
-                writer(json.dumps(rec, check_circular=False, ensure_ascii=True,
-                                       allow_nan=True, indent=2))
-            # end for record
-        # end for each tn
-    ## -- End Interface -- @}
-    
-
-# end class TypeStreamer
-    
-# end class CommandShotgunTypeFactory
 
 ## -- End Utility Types -- @}
 
@@ -190,10 +150,12 @@ Mainly used for debugging, and entities with invalid things in them."
                 SQLProxyShotgunConnection.init_database(getattr(args, 'sqlalchemy-url'), tf, fetcher)
             elif args.operation == self.OP_SHOW:
                 if args.location and is_sqlalchemy_url(args.location):
+                    # SQL
                     db = SQLProxyShotgunConnection(db_url=args.location)
                     fetcher = lambda tn: db.find(tn, [], ['id'])
                     type_names = db.type_names()
                 else:
+                    # SHOTGUN
                     conn = ProxyShotgunConnection()
                     fac = ShotgunTypeFactory()
                     fetcher = lambda tn: conn.find(tn, list(), fac.schema_by_name(tn).keys())
