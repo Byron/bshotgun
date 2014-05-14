@@ -114,11 +114,6 @@ def assert_set_entity(entity, prop, value, descriptor, factory):
 class TestShotgun(ShotgunTestCase):
     __slots__ = ()
     
-    def test_factor_create_testdb(self):
-        """Trivially create a local copy of all shotgun data and pickle it"""
-        self.fail("todo: put into be command")
-        ShotgunTestDatabase.rebuild_database()
-        
     def test_factory(self):
         """Test type-creation features"""
         fac = TestShotgunTypeFactory()

@@ -26,6 +26,11 @@ from bshotgun.orm import ShotgunTypeFactory
 DEFAULT_DB_SAMPLE='project1'
 
 
+def dataset_tree(sample_name):
+    """@return Path containing all data of a particular sample"""
+    return ShotgunTestCase.sample_root(sample_name)
+
+
 class ShotgunTestCase(TestCaseBase):
     """Base for all bshotgun test cases"""
     __slots__ = ()
@@ -47,15 +52,20 @@ class ShotgunTestCase(TestCaseBase):
 
 
 class TestShotgunTypeFactory(ShotgunTypeFactory):
-    """A factory that supports a sample name, leading to the path from which to read samples"""
+    """A factory that supports a sample name, leading to the path from which to read samples.
+    It belongs to the ShotgunTestDatabase, as it will read the schema part.
+    In Theory, both could be combined, but they seem quite orthogonal to me
+    """
     __slots__ = ('_sample_name')
+
+    SCHEMA_SUBDIR = 'schema.jsonz'
 
     def __init__(self, *args, **kwargs):
         self._sample_name = kwargs.pop('sample_name', DEFAULT_DB_SAMPLE)
         super(TestShotgunTypeFactory, self).__init__(*args, **kwargs)
 
     def _schema_path(self, type_name):
-        return ShotgunTestCase.sample_root(self._sample_name) / 'schema.jsonz' / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
+        return dataset_tree(self._sample_name) / self.SCHEMA_SUBDIR / ('%s%s' % (type_name, self.SCHEMA_FILE_EXTENSION))
 
 # end class TestShotgunTypeFactory
 
@@ -71,6 +81,7 @@ class ShotgunTestDatabase(object):
                     '_sample_name',
                 )
     
+    DATASET_SUBDIR = 'data.jsonz'
     
     def __init__(self, use_records_cache = True, sample_name=DEFAULT_DB_SAMPLE):
         """Initialize this instance
@@ -79,10 +90,10 @@ class ShotgunTestDatabase(object):
         @param sample_name name of the sample in our fixtures database"""
         self._use_records_cache = use_records_cache
         self._sample_name = sample_name
-    
+
     def _record_storage_path(self, type_name):
         """@return path to shotgun storage data"""
-        return ShotgunTestCase.sample_root(self._sample_name) / ('data.jsonz/%s.json.z' % type_name)
+        return dataset_tree(self._sample_name) / self.DATASET_SUBDIR / ('%s.json.z' % type_name)
         
     def _record_fast_storage_path(self, type_name):
         """@return path to file for storing records in a fast cache format"""
@@ -103,21 +114,24 @@ class ShotgunTestDatabase(object):
     ## @name Initialization
     # @{
     
-    def rebuild_database(self):
-        """Retrieve all data for all known entity types from shotgun. Known types are determined by the 
-        factory schema."""
-        conn = ProxyShotgunConnection()
-        fac = TestShotgunTypeFactory(sample_name=self._sample_name)
-        
-        for type_name in fac.type_names():
-            schema = fac.schema_by_name(type_name)
+    def rebuild_database(self, type_names, fetcher):
+        """Retrieve all data for all known entity types from some source shotgun.
+        @param type_names an iterable of types to fetch from fetcher
+        @param fetcher f(type_name) => [entity_data,...], whereas entity_data is a dict of values
+        matching the entity-schea
+        @note may overwrite existing data"""
+        for subdir in (ShotgunTestDatabase.DATASET_SUBDIR, TestShotgunTypeFactory.SCHEMA_SUBDIR):
+            (dataset_tree(self._sample_name) / subdir).makedirs()
+        # end for each dir to create
+
+        for type_name in type_names:
             path = self._record_storage_path(type_name)
             sys.stderr.write("Dumping '%s' data to %s ...\n" % (type_name, path))
             st = time.time()
-            records = conn.find(type_name, list(), schema.keys())
+            records = fetcher(type_name)
             self._serialize_records(path, records)
             sys.stderr.write("Obtained %i '%s' records in %fs\n" % (len(records), type_name, time.time() - st))
-        # end for each schema to read
+        # end for each type to read
     
     ## -- End Initialization -- @}
         
@@ -125,6 +139,10 @@ class ShotgunTestDatabase(object):
     # -------------------------
     ## @name Interface
     # @{
+
+    def exists(self):
+        """@return True if the dataset seems to exist"""
+        return dataset_tree(self._sample_name).isdir()
     
     def has_records(self, type_name):
         """@return True if records exist for the given shotgun data type
@@ -136,7 +154,9 @@ class ShotgunTestDatabase(object):
         It will be owned by you, as it is freshly deserialized
         @param type_name the Shotgun type name, like 'Asset'
         @note check for has_records beforehand"""
-        assert self.has_records(type_name)
+        if not self.has_records(type_name):
+            return list()
+        # end 
         ppath = self._record_fast_storage_path(type_name)
         st = time.time()
         cache_type = 'json'

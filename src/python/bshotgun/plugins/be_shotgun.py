@@ -28,11 +28,11 @@ from bshotgun import combined_shotgun_schema
 class CommandShotgunTypeFactory(ShotgunTypeFactory):
     """Writes everything into a particular tree"""
     __slots__ = ('_tree',
-                 '_type_whitelist')
+                 '_type_blacklist')
 
     def __init__(self, *args, **kwargs):
         self._tree = kwargs.pop('write_to', None)
-        self._type_whitelist = set(kwargs.pop('allowed_types', tuple()))
+        self._type_blacklist = set(kwargs.pop('ignored_types', tuple()))
         super(CommandShotgunTypeFactory, self).__init__(*args, **kwargs)
 
     def _schema_path(self, type_name):
@@ -42,8 +42,8 @@ class CommandShotgunTypeFactory(ShotgunTypeFactory):
 
     def type_names(self):
         types = super(CommandShotgunTypeFactory, self).type_names()
-        if self._type_whitelist:
-            types = set(types) & self._type_whitelist
+        if self._type_blacklist:
+            types = set(types) - self._type_blacklist
         return types
     
 # end class CommandShotgunTypeFactory
@@ -109,12 +109,12 @@ e.g. sqlite:///relative-path.sqlite or mysql://host/db"
                                type=str, 
                                help=help)
 
-        help = "A single entity type to include in the cache. If unset, all will be pulled.\
-Mainly used for debugging"
-        subparser.add_argument('--type',
+        help = "A single entity type to ignore in the cache. If unset, all will be pulled.\
+Mainly used for debugging, and entities with invalid things in them."
+        subparser.add_argument('--ignore-type',
                                nargs=1,
-                               type=str,
-                               dest='allowed_types',
+                               default=list(),
+                               dest='ignored_type',
                                help=help)
         return self
 
@@ -127,7 +127,7 @@ Mainly used for debugging"
             elif args.operation == self.OP_SQL_CACHE:
                 from bshotgun.sql import SQLProxyShotgunConnection
                 conn = ProxyShotgunConnection()
-                tf = CommandShotgunTypeFactory(allowed_types=args.allowed_types)
+                tf = CommandShotgunTypeFactory(ignored_types=args.ignored_type)
                 fetcher = lambda tn: conn.find(tn, list(), tf.schema_by_name(tn).keys())
                 SQLProxyShotgunConnection.init_database(getattr(args, 'sqlalchemy-url'), tf, fetcher)
             else:
@@ -136,6 +136,5 @@ Mainly used for debugging"
         except ValueError as err:
             sys.stdout.write(str(err) + '\n')
             sys.stdout.write("Be sure to set the kvstore values listed with -c\n")
-            raise
             return self.ERROR
         # end convert exceptions
