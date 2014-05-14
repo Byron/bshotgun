@@ -7,6 +7,7 @@
 """
 __all__ = []
 
+import sys
 from urlparse import urlparse
 from hashlib import md5
 
@@ -36,9 +37,11 @@ class WriterShotgunTypeFactory(ShotgunTypeFactory):
     def __init__(self, tree):
         ShotgunTypeFactory.__init__(self)
         self._tree = tree
-        self._tree.makedirs()
 
     def settings_value(self):
+        if not self._tree.isdir():
+            self._tree.makedirs()
+        # end dirs on demand
         return DictObject({'schema_cache_tree' : self._tree})    
 
 # end class WriterShotgunTypeFactory
@@ -85,14 +88,15 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
     "ensure_newline_at_eof_on_save": true,
     
 }        @return possibly changed args"""
-        dsname = getattr(args, 'db-name')
-        sgtdb = ShotgunTestDatabase(sample_name=dsname)
-        if sgtdb.exists():
-            raise InputError("Dataset named '%s' did already exist - please choose a different one" % dsname)
-        # end
-
+        dsname = 'UNSET'
         if args.operation != self.OP_BUILD:
             args.scrambling_disabled = True
+        else:
+            dsname = getattr(args, 'db-name')
+            sgtdb = ShotgunTestDatabase(sample_name=dsname)
+            if sgtdb.exists():
+                raise InputError("Dataset named '%s' did already exist - please choose a different one" % dsname)
+            # end
         # end never scramble outside of build mode
 
         # SETUP SCRAMBLER
@@ -114,7 +118,9 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
         # end scrambler
 
         # FIGURE OUT SOURCE AND SETUP TYPES
-        if args.source is None:
+        # get rid of list
+        args.source = args.source and args.source[0] or list()
+        if not args.source:
             # SHOTGUN
             #########
             conn = ProxyShotgunConnection()
@@ -185,6 +191,7 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
         If it is just a name, it's interpreted as sample of an existing jsonz dataset;" % (default, default)
         subparser.add_argument('-s', '--source',
                                metavar='NAME-OR-SQLURL',
+                               nargs=1, # normalize with source in 'show'
                                dest='source',
                                help=help)
 
@@ -199,12 +206,31 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
         Destination sample must not exist."
         subparser.add_argument('db-name',
                                 help=help)
+
+        ######################
+        # SUBCOMMAND: show ##
+        ####################
+        description = "Similar to the shotgun command's version, but the unit-test datasets"
+        help = description
+        subparser = factory.add_parser(self.OP_SHOW, description=description, help=help)
+
+        help = "Either an sqlalchemy URL to show sql contents or a name of a dataset for testing"
+        subparser.add_argument('source',
+                                metavar='NAME-OR-SQLURL',
+                                nargs=1,
+                                help=help)
         
         return self
 
     def execute(self, args, remaining_args):
         self.apply_overrides(combined_shotgun_schema, args)
         args = self.validate_args(args)
-        ShotgunTestDatabase(sample_name=getattr(args, 'db-name')).rebuild_database(args.type_names, args.fetcher)
+        if args.operation == self.OP_BUILD:
+            ShotgunTestDatabase(sample_name=getattr(args, 'db-name')).rebuild_database(args.type_names, args.fetcher)
+        elif args.operation == self.OP_SHOW:
+            from bshotgun.plugins.be_shotgun import TypeStreamer
+            TypeStreamer(args.fetcher, args.type_names).stream(sys.stdout.write)
+        else:
+            raise NotImplemented(self.operation)
         return self.SUCCESS
 

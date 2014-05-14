@@ -81,7 +81,7 @@ class TypeStreamer(object):
                     if isinstance(v, datetime):
                         rec[k] = datetime_to_date_time_string(v)
                 # end fix datetime
-                writer(json.dumps(rec, check_circular=False, ensure_ascii=False,
+                writer(json.dumps(rec, check_circular=False, ensure_ascii=True,
                                        allow_nan=True, indent=2))
             # end for record
         # end for each tn
@@ -162,6 +162,9 @@ Mainly used for debugging, and entities with invalid things in them."
                                dest='ignored_type',
                                help=help)
 
+        ######################
+        # SUBCOMMAND: show ##
+        ####################
         description = "Write the entire dataset to stdout"
         help = """Provided with a data source, it will display all data as json."""
         subparser = factory.add_parser(self.OP_SHOW, description=description, help=help)
@@ -198,7 +201,7 @@ Mainly used for debugging, and entities with invalid things in them."
                 # end handle supported types
                 TypeStreamer(fetcher, type_names).stream(sys.stdout.write)
             else:
-                raise AssertionError("Didn't implement subcommand")
+                raise NotImplemented(self.operation)
             return self.SUCCESS
         except ValueError as err:
             sys.stdout.write(str(err) + '\n')
