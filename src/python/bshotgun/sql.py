@@ -202,14 +202,9 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         
         return self
 
-    def fields_by_typename(self, type_name):
-        """@return all field-names by the given type-name, based on the information in our database
-        @note we simulate knowledge about the schema by obtaining an instance's properties"""
-        raise NotImplementedError("todo")
-
     def type_names(self):
         """@return a list of names of all store entity types"""
-        raise NotImplementedError("todo")
+        return self._meta.tables.keys()
     
     ## -- End Interface -- @}
     

@@ -125,7 +125,7 @@ class ShotgunTestsBeSubCommand(CommandlineOverridesMixin, BeSubCommand, bapp.plu
                 ############
                 db = SQLProxyShotgunConnection(db_url=args.source)
 
-                args.fetcher = lambda tn: scrambler(db.find(tn, [], db.fields_by_typename(tn)))
+                args.fetcher = lambda tn: scrambler(db.find(tn, [], ['id']))
                 args.type_names = db.type_names()
             else:
                 # JSONZ
