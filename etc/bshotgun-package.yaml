@@ -1,6 +1,7 @@
 packages:
   bshotgun:
-    # trees must be set by the parent assembly
+    trees:
+      - '{settings-files.bshotgun-package.dirname.dirname}'
     requires:
       - bcore
       - shotgun-python-api
@@ -15,8 +16,3 @@ packages:
     python:
       import: 
         - bshotgun.plugins.be_shotgun
-
-  nosetests:
-    # make sure testing works from the parent assembly
-    requires:
-      - bshotgun

@@ -4,10 +4,12 @@
 		{
 			"follow_symlinks": true,
 			"path": "../..",
+			"folder_exclude_patterns" : ["cover", ".git", "pages"],
 			"file_exclude_patterns" : [
 				"*.db_tmp",
 				"*.json.z*",
 				"*.pickle.zip*",
+				".coverage"
 			]
 		}
 	]

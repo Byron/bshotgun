@@ -6,3 +6,8 @@ packages:
     python:
       import: 
         - bshotgun.tests.plugins.be_shotgun_tests
+
+  nosetests:
+    # make sure testing works from the parent assembly
+    requires:
+      - bshotgun
