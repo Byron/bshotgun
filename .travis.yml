@@ -5,10 +5,10 @@ python:
   # - "pypy" - see https://travis-ci.org/Byron/bcore/jobs/24387322
 
 install:
-  pip install coveralls
-  pip install git+https://github.com/zzzeek/sqlalchemy.git
-  pip install git+https://github.com/Byron/bcore.git
-  pip install git+https://github.com/shotgunsoftware/python-api.git
+  - pip install coveralls
+  - pip install git+https://github.com/zzzeek/sqlalchemy.git
+  - pip install git+https://github.com/Byron/bcore.git
+  - pip install git+https://github.com/shotgunsoftware/python-api.git
 script:
   nosetests src/python --with-coverage
 after_success:

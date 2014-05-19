@@ -1,3 +1,6 @@
+[![Coverage Status](https://coveralls.io/repos/Byron/bshotgun/badge.png)](https://coveralls.io/r/Byron/bshotgun)
+[![Build Status](https://travis-ci.org/Byron/bshotgun.svg?branch=master)](https://travis-ci.org/Byron/bshotgun)
+
 This project aims to help writing better code when interacting with shotgun, and produce working code faster and more safely.
 
 It does this by providing an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping) to make accessing shotgun data easier. To test your code, it provides an anonymized dataset based on a real project that can be worked with offline.
