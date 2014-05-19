@@ -95,7 +95,7 @@ def scramble_nested_strings(records, whitelist, transformer=lambda s: s):
     def scramble_dict(rec):
         """scrambles a dict, recursively traversing the tree"""
         for k,v in rec.iteritems():
-            if k == 'type':
+            if k.lower().endswith('type'):
                 continue
             rec[k] = scramble_value(v)
         # end for each value

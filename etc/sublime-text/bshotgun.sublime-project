@@ -6,7 +6,7 @@
 			"path": "../..",
 			"file_exclude_patterns" : [
 				"*.db_tmp",
-				"*.json.zip*",
+				"*.json.z*",
 				"*.pickle.zip*",
 			]
 		}
