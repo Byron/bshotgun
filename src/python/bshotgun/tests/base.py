@@ -12,6 +12,7 @@ import json
 import marshal
 import time
 import sys
+import os
 import zlib
 
 
@@ -93,6 +94,7 @@ class ShotgunTestDatabase(object):
                 )
     
     DATASET_SUBDIR = 'data.jsonz'
+    EVAR_NO_CACHE = 'BSHOTGUN_TESTS_NO_DATASET_CACHE'
     
     def __init__(self, use_records_cache = True, sample_name=DEFAULT_DB_SAMPLE):
         """Initialize this instance
@@ -100,6 +102,9 @@ class ShotgunTestDatabase(object):
         of the records will be created. It loads 60 times faster than json
         @param sample_name name of the sample in our fixtures database"""
         self._use_records_cache = use_records_cache
+        if self.EVAR_NO_CACHE in os.environ:
+            self._use_records_cache = False
+        # end turn off cache to possibly save time
         self._sample_name = sample_name
 
     def _record_storage_path(self, type_name):
