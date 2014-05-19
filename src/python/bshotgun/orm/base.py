@@ -21,7 +21,7 @@ from butility import (DictObject,
                       LazyMixin,
                       Path)
 from bproperty import (PropertyDescriptor,
-                       PropertyBase,
+                       Property,
                        PropertySchemaMeta)
 from .types import (value_type_map,
                     _ShotgunDateMixin,
@@ -187,7 +187,7 @@ class ShotgunEntity(LazyMixin):
 # end class ShotgunEntity
 
 
-class ShotgunProperty(PropertyBase):
+class ShotgunProperty(Property):
     """Implements a shotgun property and access through a ShotgunEntity"""
     __slots__ = ()
 

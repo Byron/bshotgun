@@ -15,7 +15,7 @@ import sys
 import zlib
 
 
-from butility.tests import TestCaseBase
+from butility.tests import TestCase
 from butility import Path
 from bshotgun import (ProxyShotgunConnection,
                       SQLProxyShotgunConnection,
@@ -31,7 +31,7 @@ def dataset_tree(sample_name):
     return ShotgunTestCase.sample_root(sample_name)
 
 
-class ShotgunTestCase(TestCaseBase):
+class ShotgunTestCase(TestCase):
     """Base for all bshotgun test cases"""
     __slots__ = ()
 

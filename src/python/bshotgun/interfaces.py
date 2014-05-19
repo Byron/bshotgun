@@ -9,9 +9,9 @@
 __all__ = ['IShotgunConnection']
 
 from butility import (abstractmethod,
-                      InterfaceBase)
+                      Interface)
 
-class IShotgunConnection(InterfaceBase):
+class IShotgunConnection(Interface):
     """Represents a connection to the shotgun database. It obeys the default shotgun API, for reference 
     see https://github.com/shotgunsoftware/python-api/wiki/Reference%3A-Methods
     """
