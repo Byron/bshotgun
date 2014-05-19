@@ -11,4 +11,6 @@ setup(name='bshotgun',
       url='https://github.com/Byron/bshotgun',
       packages=find_packages(pkg_root),
       package_dir={'' : pkg_root},
+      package_data={'bshotgun.tests' : ['fixtures/samples/scrambled-ds1/data.jsonz/*.json.z',
+                                        'fixtures/samples/scrambled-ds1/schema.jsonz/*.pickle.zip']}
      )
