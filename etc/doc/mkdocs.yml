@@ -10,6 +10,7 @@ site_dir: ../../doc/mkdocs/html
 
 pages:
 - ['index.md', 'Home']
+- ['about_shotgun.md', 'Research', 'About Shotgun']
 - ['plugins.md', 'Plugins', 'BE PLUGINS: setup the ORM from the commandline']
 - ['license.md', 'License']
 
