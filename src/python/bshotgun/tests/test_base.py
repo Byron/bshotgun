@@ -8,12 +8,12 @@
 """
 __all__ = []
 
-import shotgun_api3
-from .base import ShotgunTestCase
+from copy import deepcopy
+from .base import (ShotgunTestCase,
+                   ShotgunConnectionMock)
 
 # test import *
 from bshotgun import *
-from shotgun_api3 import Fault
 from bapp.tests import with_application
 
 
@@ -27,6 +27,34 @@ class TestShotgun(ShotgunTestCase):
         sg = ProxyShotgunConnection()
         # we are not configured
         self.failUnlessRaises(ValueError, sg.find_one, 'Foo', [('id', 'is', 1)])
+
+    def test_mock(self):
+        """tests for test-tools"""
+        sg = ShotgunConnectionMock()
+
+        p =       {      'type': 'Project',
+                         'id': 1,
+                         'tank_name': None,
+                         'name': 'project_name' }
+
+        ls = {'code' : 'foo',
+                         'mac_path' : 'this',
+                         'linux_path' : 'this',
+                         'windows_path' : 'this',
+                         'id' : 1,
+                         'type' : 'LocalStorage'}
+        ls2 = deepcopy(ls)
+        ls2['id'] = 5
+        sg.set_entities([p, ls, ls2])
+
+        assert sg.find_one('Project', [['id', 'is', 1]])
+        assert len(sg.find('LocalStorage', list())) == 2
+
+        assert isinstance(sg.server_info, dict)
+        assert isinstance(sg.schema_read(), dict)
+
+        sg.set_entity_schema('Project', dict(name = 42))
+        assert sg.schema_field_read('Project', 'name') == {'name' : 42}
         
     
 

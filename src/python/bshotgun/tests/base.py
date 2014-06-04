@@ -6,7 +6,8 @@
 @author Sebastian Thiel
 @copyright [GNU Lesser General Public License](https://github.com/Byron/bshotgun/blob/master/LICENSE.md)
 """
-__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection', 'ShotgunTestCase', 'TestShotgunTypeFactory']
+__all__ = ['ShotgunTestDatabase', 'ReadOnlyTestSQLProxyShotgunConnection', 'ShotgunTestCase', 
+           'TestShotgunTypeFactory', 'ShotgunConnectionMock']
 
 import json
 import marshal
@@ -14,6 +15,7 @@ import time
 import sys
 import os
 import zlib
+from copy import deepcopy
 
 
 from butility.tests import TestCase
@@ -22,6 +24,7 @@ from bshotgun import (ProxyShotgunConnection,
                       SQLProxyShotgunConnection,
                       ProxyMeta)
 from bshotgun.orm import ShotgunTypeFactory
+from mock import Mock
 
 
 DEFAULT_DB_SAMPLE='scrambled-ds1'
@@ -302,11 +305,203 @@ class ReadOnlyTestSQLProxyShotgunConnection(SQLProxyShotgunConnection):
         
         return type(self)(SQLProxyShotgunConnection.init_database(self._sqlite_rodb_url(), fac, fetcher)._meta)
     
-    
-    
     ## -- End Test Database Initialization -- @}
 
-    
-
 # end class ReadOnlyTestSQLProxyShotgunConnection
+
+
+class ShotgunConnectionMock(Mock):
+    """Mocks a shotgun connection to some extend, yielding information of an in-memory shotgun database
+    @note This mock currently is only good for well-behaving clients who supply valid information. We will not 
+    reproduce exceptions as created by the actual implementation
+    @note this implementation is based on the sgtk implementation at 
+    https://github.com/shotgunsoftware/tk-core/blob/master/tests/python/tank_test/tank_test_base.py#L343"""
+    _slots_ = ('_db', '_schema', '_server_info')
+
+    def __init__ (self, *args, **kwargs):
+        super(ShotgunConnectionMock, self).__init__(*args, **kwargs)
+        self.clear()
+
+    def _get_child_mock(self, **kwargs):
+        raise AssertionError("Should explicitly mock '%s'" % kwargs['name'])
+        
+    # -------------------------
+    ## @name Shotgun Connection Interface
+    # @{
+
+    base_url = 'http://nointernet.intern'
+
+    def find_one(self, entity_type, filters, fields=None, *args, **kws):
+        """Version of find_one which only returns values when filtered by id
+        @return all entity information, not filtered by field"""
+        for (type, id), entity in self._db.items():
+            if type != entity_type:
+                continue
+            # now check filters
+            
+            # convert complex into new style
+            if isinstance(filters, dict):
+                new_filters = list()
+                if filters['logical_operator'] != 'and':
+                    raise Exception('unsupported sg mock find_one filter %s' % filters)
+                for c in filters['conditions']:
+                    if c['relation'] != 'is':
+                        raise Exception('Unsupported sg mock find one filter %s' % filters)
+                    field = c['path']
+                    value = c['values'][0]
+                    if len(c['values']) > 1:
+                        raise Exception('Unsupported sg mock find one filter %s' % filters)
+                    new_filters.append( [field, 'is', value])
+                # end for each condition
+                filters = new_filters
+            # end convert dicts to lists
+            
+
+            found = True
+            for f in filters:
+                # assume operator is equals: e.g
+                # filter = ["field", "is", "value"]
+                field = f[0]
+                if f[1] != "is":
+                    raise Exception('Unsupported sg mock find one filter %s' % filters)
+                value = f[2]
+
+                # now search through entity to see if we got it
+                if field in entity and entity[field] == value:
+                    # it is a match! Keep going...
+                    pass
+                else:
+                    # no match!
+                    found = False
+                    break
+                # end 
+            # end for each filter
+                
+            # did we find it?
+            if found:
+                return deepcopy(entity)
+            # end bail out early
+        # end for each piece of entity information
+        
+        # no match
+        return None            
+
+    def find(self, entity_type, filters, *args, **kws):
+        """@return all matching entries for specified type. 
+        Filters are only partially implemented, which could return too much"""
+        results = [self._db[key] for key in self._db if key[0] == entity_type]
+        
+        # support [['id', 'in', 23, 34]]
+        if isinstance(filters, list) and len(filters) == 1:
+            # we have a [[something]] structure
+            inner_filter = filters[0]
+            if isinstance(inner_filter, list) and \
+               len(inner_filter) > 2 and \
+               inner_filter[0] == 'id' and \
+               inner_filter[1] == 'in':
+                all_items_of_type = [self._db[key] for key in self._db if key[0] == entity_type]
+                ids_to_find = inner_filter[2:]
+                matches = []
+                for i in all_items_of_type:
+                    if i['id'] in ids_to_find:
+                        matches.append(i)
+                
+                # assign to final matches structure
+                results = matches
+        # end handle filter type
+            
+        # support dict style with 'is' relation
+        if isinstance(filters, dict):
+            for sg_filter in filters.get('conditions', list()):
+                if sg_filter['relation'] != 'is':
+                    continue
+                    
+                if sg_filter['values'] == [None] and sg_filter['path'] == 'id':
+                    # always return empty for this
+                    results = list()
+                
+                if isinstance(sg_filter['values'][0], (int, str)):
+                    # only handling simple string and number relations
+                    field_name = sg_filter['path']
+                    # filter only if value exists in mocked data (if field not there don't skip)
+                    results = [result for result in results 
+                                if result.get(field_name, sg_filter['values'][0]) in sg_filter['values']]
+                # end
+            # end for each filter condition
+        # end handle dict filter
+
+        return deepcopy(results)
+
+    def schema_field_read(self, entity_type, field_name):
+        """@return the schema info dictionary for the given field of the entity type"""
+        schema = self._schema[entity_type]
+        if field_name is None:
+            return deepcopy(schema)
+        # end handle schema
+        return {field_name : deepcopy(schema[field_name])}
+
+    def schema_read(self):
+        """@return our schema so far"""
+        return deepcopy(self._schema)
+
+    def upload_thumbnail(*args, **kwargs):
+        """noop"""
+        # do nothing
+
+    @property
+    def server_info(self):
+        """@return server version - see set_server_info()"""
+        return self._server_info
+    
+    ## -- End Shotgun Connection Interface -- @}
+
+    # -------------------------
+    ## @name Interface
+    # Interface to help building a database
+    # @{
+
+    def db(self):
+        """@return {('Type', id) : dict(field_data)} a data structure similar to the given one"""
+        return self._db
+
+    def set_entity_schema(self, entity_type, schema_data):
+        """Set the entire schema of a given entity type.
+        @param entity_type 
+        @param schema_data matches what would be retrieved by entity_schema(entity_type, None), 
+        or a subset of it
+        @return self"""
+        assert isinstance(schema_data, dict)
+        self._schema[entity_type] = schema_data
+        return self
+
+    def set_entities(self, entities):
+        """Fill db with given entities
+        @param entities a single dict with entitiy fields and values, or a list of such dicts.
+        Each needs type and id set
+        @return self"""
+        if not isinstance(entities, (list, tuple)):
+            entities = [entities]
+        # end
+
+        for e in entities:
+            self._db[(e['type'], e['id'])] = e
+        # end for each entity to set
+
+        return self
+
+    def set_server_info(self, version_tuple):
+        """Set the server info to the given major,minor,patch tuple
+        @return self"""
+        self._server_info['version'] =  version_tuple
+        return self
+        
+    def clear(self):
+        """Clear all data in the database
+        @return self"""
+        self._db = dict()
+        self._schema = dict()
+        self._server_info = dict(version=(4,3,9))
+        return self
+        
+    ## -- End Interface -- @}
 
