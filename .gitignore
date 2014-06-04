@@ -5,5 +5,7 @@
 .coverage
 cover/
 build/
+dist/
+sdist/
 pages/
 doc/

@@ -12,13 +12,6 @@ __all__ = ['SQLProxyShotgunConnection']
 import sys
 import time
 
-import sqlalchemy
-from sqlalchemy.schema import (Table,
-                               Column,
-                               MetaData)
-from sqlalchemy.types import (Integer,
-                              Binary)
-
 from cPickle import (dumps,
                      loads)
 from zlib import (compress,
@@ -92,6 +85,8 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         @param type_name shotgun typename
         @param meta_data SQLAlchemy meta data object to which to associate the table
         @note table names will be lower case !"""
+        from sqlalchemy.schema import (Table, Column)
+        from sqlalchemy.types import (Integer, Binary)
         return Table(type_name.lower(), meta_data,
                      Column('id', Integer, primary_key = True),
                      Column('properties', Binary),
@@ -103,6 +98,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         given factory
         @param cls
         @param factory instance of type ShotgunTypeFactory"""
+        from sqlalchemy.schema import MetaData
         md = MetaData()
         for type_name in factory.type_names():
             cls._make_table(type_name, md)
@@ -138,6 +134,8 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         @param fetch_entity_data_fun a function f(type_name) -> [entity_dict, ...] returning 
         whatever the shotgun API would return when querying all entities of a given type.
         @return a new instance of ourselves initialized to use the given engine_url to fetch data from"""
+        import sqlalchemy
+        from sqlalchemy.schema import MetaData
         engine = sqlalchemy.create_engine(engine_url)
         existing_meta_data = MetaData(engine, reflect = True)
         if existing_meta_data.tables:
@@ -185,6 +183,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         database connection and re-connect using kvstore data when needed.
         It can also be an SQLAlchemy.MetaData instance, which will be used directly
         @return this instance"""
+        from sqlalchemy.schema import MetaData
         if not db_url:
             try:
                 del(self._meta)
@@ -220,6 +219,7 @@ class SQLProxyShotgunConnection(ProxyShotgunConnection):
         what our arguments demand, we will just pass the call on to our base class.
         @note will always return *all* fields that are known to the schema, assuming that user's who don't want
         that don't use it anyway."""
+        import sqlalchemy
         # dict filters = nested expression
         return_super = lambda: super(SQLProxyShotgunConnection, self).find(entity_type, filters, fields, order,
                                                                 filter_operator, limit, retired_only, page)
