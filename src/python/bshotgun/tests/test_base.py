@@ -55,6 +55,15 @@ class TestShotgun(ShotgunTestCase):
 
         sg.set_entity_schema('Project', dict(name = 42))
         assert sg.schema_field_read('Project', 'name') == {'name' : 42}
-        
+
+
+        sg.update('Project', 1, {'newval' : 1})
+        assert p['newval'] == 1
+
+        del p['type']
+        newp = sg.create('Project', p)
+        assert newp is not p and 'id' in newp and 'type' in newp
+        assert newp['id'] != p['id']
+
     
 

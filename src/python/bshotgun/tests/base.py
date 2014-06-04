@@ -329,6 +329,22 @@ class ShotgunConnectionMock(Mock):
     ## @name Shotgun Connection Interface
     # @{
 
+    def update(self, entity_type, entity_id, updates):
+        """Allow updates - subclasses should restrict this
+        @note we don't check anything, just do what we are told"""
+        entity = self._db[(entity_type, entity_id)]
+        entity.update(updates)
+        return self
+
+    def create(self, entity_type, data, return_fields=None):
+        """@return the newly created entity.
+        @note we don't check anything, but assure it get's an unused id"""
+        nd = deepcopy(data)
+        nd['id'] = self.next_unused_entity_id(entity_type)
+        nd['type'] = entity_type
+        self.set_entities(nd)
+        return nd
+
     base_url = 'http://nointernet.intern'
 
     def find_one(self, entity_type, filters, fields=None, *args, **kws):
@@ -463,6 +479,14 @@ class ShotgunConnectionMock(Mock):
     def db(self):
         """@return {('Type', id) : dict(field_data)} a data structure similar to the given one"""
         return self._db
+
+    def next_unused_entity_id(self, entity_type):
+        """@return an id which wasn't yet used by the given entity type"""
+        try:
+            return max(id for (type, id) in self._db.keys() if type == entity_type) + 1
+        except ValueError:
+            return 0
+        # end 
 
     def set_entity_schema(self, entity_type, schema_data):
         """Set the entire schema of a given entity type.
