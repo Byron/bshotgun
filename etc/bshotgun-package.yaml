@@ -1,7 +1,7 @@
 packages:
   bshotgun:
     trees:
-      - '{settings-files.bshotgun-package.dirname.dirname}'
+      - '{yaml.bshotgun-package.dirname.dirname}'
     requires:
       - bcore
       - shotgun-python-api
