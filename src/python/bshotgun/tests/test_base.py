@@ -57,8 +57,8 @@ class TestShotgun(ShotgunTestCase):
         assert sg.schema_field_read('Project', 'name') == {'name' : 42}
 
 
-        sg.update('Project', 1, {'newval' : 1})
-        assert p['newval'] == 1
+        sg.update('Project', 1, {'newval' : 1, 'tank_name' : 'hi'})
+        assert p['newval'] == 1 and p['tank_name'] == 'hi'
 
         del p['type']
         newp = sg.create('Project', p)
